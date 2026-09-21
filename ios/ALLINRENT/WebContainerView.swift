@@ -21,6 +21,7 @@ struct WebContainerView: UIViewRepresentable {
     webView.navigationDelegate = context.coordinator
     webView.uiDelegate = context.coordinator
     context.coordinator.webView = webView
+    context.coordinator.requestLocationIfNeeded()
     webView.load(URLRequest(url: startURL))
     return webView
   }
@@ -30,11 +31,19 @@ struct WebContainerView: UIViewRepresentable {
   final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, CLLocationManagerDelegate {
     weak var webView: WKWebView?
     private let locationManager = CLLocationManager()
-    private var locationGrant: ((Bool) -> Void)?
 
     override init() {
       super.init()
       locationManager.delegate = self
+    }
+
+    func requestLocationIfNeeded() {
+      switch locationManager.authorizationStatus {
+      case .notDetermined:
+        locationManager.requestWhenInUseAuthorization()
+      default:
+        break
+      }
     }
 
     func webView(
@@ -56,7 +65,10 @@ struct WebContainerView: UIViewRepresentable {
 
       if scheme == "http" || scheme == "https" {
         let host = url.host?.lowercased() ?? ""
-        let allowed = host.hasSuffix("all-inrent.com") || host.contains("stripe.com") || host.contains("js.stripe.com")
+        let allowed =
+          host.hasSuffix("all-inrent.com") ||
+          host.contains("stripe.com") ||
+          host.contains("js.stripe.com")
         if allowed || navigationAction.targetFrame != nil {
           decisionHandler(.allow)
           return
@@ -67,33 +79,6 @@ struct WebContainerView: UIViewRepresentable {
       }
 
       decisionHandler(.allow)
-    }
-
-    func webView(
-      _ webView: WKWebView,
-      requestGeolocationPermissionFor origin: WKSecurityOrigin,
-      initiatedByFrame frame: WKFrameInfo,
-      decisionHandler: @escaping (WKGeolocationPermissionDecision) -> Void
-    ) {
-      locationGrant = { granted in
-        decisionHandler(granted ? .grant : .deny)
-      }
-      switch locationManager.authorizationStatus {
-      case .authorizedWhenInUse, .authorizedAlways:
-        decisionHandler(.grant)
-        locationGrant = nil
-      case .denied, .restricted:
-        decisionHandler(.deny)
-        locationGrant = nil
-      default:
-        locationManager.requestWhenInUseAuthorization()
-      }
-    }
-
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-      let granted = manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways
-      locationGrant?(granted)
-      locationGrant = nil
     }
 
     func webView(
