@@ -12,7 +12,14 @@ platform :ios do
       in_house: false
     )
 
-    get_certificates(api_key: api_key)
+    keychain_name = ENV.fetch("MATCH_KEYCHAIN_NAME", "fastlane_tmp_keychain")
+    keychain_password = ENV.fetch("MATCH_KEYCHAIN_PASSWORD", "")
+
+    get_certificates(
+      api_key: api_key,
+      keychain_path: keychain_name,
+      keychain_password: keychain_password
+    )
     get_provisioning_profile(
       api_key: api_key,
       app_identifier: "com.allinrent.app"
