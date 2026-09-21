@@ -1,0 +1,6 @@
+*.p8
+AuthKey_*.p8
+ios/private_keys/
+ios/build/
+.DS_Store
+
