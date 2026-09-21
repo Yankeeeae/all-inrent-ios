@@ -25,12 +25,6 @@ jobs:
           mkdir -p private_keys
           printf '%s' "$APP_STORE_CONNECT_API_KEY" > "private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8"
 
-      - name: App icon 1024
-        run: |
-          sips -z 1024 1024 "../public/icon-512.png" --out /tmp/air-icon.png
-          sips -s format bmp /tmp/air-icon.png --out /tmp/air-icon.bmp
-          sips -s format png /tmp/air-icon.bmp --out ALLINRENT/Assets.xcassets/AppIcon.appiconset/AppIcon.png
-
       - name: Install XcodeGen
         run: brew install xcodegen
 
