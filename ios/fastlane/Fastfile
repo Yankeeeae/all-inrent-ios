@@ -20,7 +20,8 @@ platform :ios do
       certificate_path: ENV.fetch("P12_PATH"),
       certificate_password: ENV.fetch("P12_PASSWORD"),
       keychain_path: keychain_path,
-      keychain_password: keychain_password
+      keychain_password: keychain_password,
+      skip_certificate_verification: true
     )
 
     get_provisioning_profile(
