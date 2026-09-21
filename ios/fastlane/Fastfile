@@ -3,6 +3,8 @@ default_platform(:ios)
 platform :ios do
   desc "Compile et envoie le build sur App Store Connect / TestFlight"
   lane :release do
+    setup_ci
+
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
       issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
@@ -10,17 +12,38 @@ platform :ios do
       in_house: false
     )
 
-    key_path = ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH")
-    key_id = ENV.fetch("APP_STORE_CONNECT_KEY_ID")
-    issuer_id = ENV.fetch("APP_STORE_CONNECT_ISSUER_ID")
+    get_certificates(api_key: api_key)
+    get_provisioning_profile(
+      api_key: api_key,
+      app_identifier: "com.allinrent.app"
+    )
+    profile_name = lane_context[SharedValues::SIGH_NAME]
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ALLINRENT.xcodeproj",
+      team_id: "59GW7X6RA6",
+      code_sign_identity: "Apple Distribution",
+      profile_name: profile_name,
+      bundle_identifier: "com.allinrent.app",
+      targets: ["ALLINRENT"]
+    )
 
     build_app(
       project: "ALLINRENT.xcodeproj",
       scheme: "ALLINRENT",
+      configuration: "Release",
       export_method: "app-store",
       destination: "generic/platform=iOS",
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{key_path} -authenticationKeyID #{key_id} -authenticationKeyIssuerID #{issuer_id}",
-      export_xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{key_path} -authenticationKeyID #{key_id} -authenticationKeyIssuerID #{issuer_id}"
+      skip_profile_detection: true,
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        teamID: "59GW7X6RA6",
+        provisioningProfiles: {
+          "com.allinrent.app" => profile_name
+        }
+      }
     )
 
     upload_to_testflight(
