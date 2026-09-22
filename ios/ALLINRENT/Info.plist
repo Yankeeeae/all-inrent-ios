@@ -43,6 +43,10 @@
   </array>
   <key>UIRequiresFullScreen</key>
   <true/>
+  <key>UIStatusBarStyle</key>
+  <string>UIStatusBarStyleLightContent</string>
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <true/>
   <key>NSLocationWhenInUseUsageDescription</key>
   <string>ALL IN RENT utilise votre position pour trouver des véhicules près de vous.</string>
   <key>NSPhotoLibraryUsageDescription</key>
