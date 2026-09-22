@@ -33,7 +33,7 @@ platform :ios do
       xcodeproj: "ALLINRENT.xcodeproj",
       plist_path: "ALLINRENT/Info.plist",
       block: lambda do |plist|
-        plist["CFBundleVersion"] = "22"
+        plist["CFBundleVersion"] = "23"
         plist["CFBundleShortVersionString"] = "1.0.1"
       end
     )
@@ -55,7 +55,7 @@ platform :ios do
       export_method: "app-store",
       destination: "generic/platform=iOS",
       skip_profile_detection: true,
-      xcargs: "CURRENT_PROJECT_VERSION=22 MARKETING_VERSION=1.0.1",
+      xcargs: "CURRENT_PROJECT_VERSION=23 MARKETING_VERSION=1.0.1",
       export_options: {
         method: "app-store",
         signingStyle: "manual",
