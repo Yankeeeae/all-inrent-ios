@@ -31,6 +31,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
 
   override var prefersStatusBarHidden: Bool { false }
   override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
+  override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge { [.left, .top] }
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -52,6 +53,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     webView.scrollView.verticalScrollIndicatorInsets = .zero
     webView.scrollView.horizontalScrollIndicatorInsets = .zero
     webView.scrollView.bounces = true
+    webView.scrollView.delaysContentTouches = false
     webView.allowsBackForwardNavigationGestures = true
     webView.navigationDelegate = self
     webView.uiDelegate = self
@@ -76,20 +78,38 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     pushSafeAreaInsets()
   }
 
+  private func windowSafeArea() -> UIEdgeInsets {
+    if let insets = view.window?.safeAreaInsets, insets.top > 0 {
+      return insets
+    }
+    let scene =
+      view.window?.windowScene
+      ?? UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+    if let insets = scene?.windows.first(where: \.isKeyWindow)?.safeAreaInsets, insets.top > 0 {
+      return insets
+    }
+    if let insets = scene?.windows.first?.safeAreaInsets, insets.top > 0 {
+      return insets
+    }
+    return UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0)
+  }
+
   private func pushSafeAreaInsets() {
-    let top = max(view.safeAreaInsets.top, webView.safeAreaInsets.top)
-    let bottom = max(view.safeAreaInsets.bottom, webView.safeAreaInsets.bottom)
+    let insets = windowSafeArea()
+    let top = (insets.top > 0 ? insets.top : 59) + 10
+    let bottom = insets.bottom > 0 ? insets.bottom : 34
     let js = """
     (function(){
       var r = document.documentElement;
       r.style.setProperty('--app-safe-top', '\(top)px');
       r.style.setProperty('--app-safe-bottom', '\(bottom)px');
-      if (!document.getElementById('allinrent-safe')) {
-        var s = document.createElement('style');
+      var s = document.getElementById('allinrent-safe');
+      if (!s) {
+        s = document.createElement('style');
         s.id = 'allinrent-safe';
-        s.textContent = '.app-map-topbar,.relative.z-30.shrink-0.border-b{padding-top:max(8px,var(--app-safe-top))!important;}';
         (document.head || r).appendChild(s);
       }
+      s.textContent = '.app-map-topbar,.relative.z-30.shrink-0.border-b{padding-top:max(12px,var(--app-safe-top))!important;}';
     })();
     """
     webView.evaluateJavaScript(js, completionHandler: nil)
