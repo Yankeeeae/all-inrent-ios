@@ -31,7 +31,7 @@ jobs:
       - name: Generate Xcode project
         run: |
           xcodegen generate
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 23" ALLINRENT/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 24" ALLINRENT/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.1" ALLINRENT/Info.plist
           plutil -p ALLINRENT/Info.plist | grep CFBundle
 
