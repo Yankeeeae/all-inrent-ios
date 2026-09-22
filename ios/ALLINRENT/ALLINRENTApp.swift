@@ -69,6 +69,30 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     webView.frame = view.bounds
     webView.scrollView.contentInset = .zero
     webView.scrollView.scrollIndicatorInsets = .zero
+    pushSafeAreaInsets()
+  }
+
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    pushSafeAreaInsets()
+  }
+
+  private func pushSafeAreaInsets() {
+    let top = max(view.safeAreaInsets.top, webView.safeAreaInsets.top)
+    let bottom = max(view.safeAreaInsets.bottom, webView.safeAreaInsets.bottom)
+    let js = """
+    (function(){
+      var r = document.documentElement;
+      r.style.setProperty('--app-safe-top', '\(top)px');
+      r.style.setProperty('--app-safe-bottom', '\(bottom)px');
+      if (!document.getElementById('allinrent-safe')) {
+        var s = document.createElement('style');
+        s.id = 'allinrent-safe';
+        s.textContent = '.app-map-topbar,.relative.z-30.shrink-0.border-b{padding-top:max(8px,var(--app-safe-top))!important;}';
+        (document.head || r).appendChild(s);
+      }
+    })();
+    """
+    webView.evaluateJavaScript(js, completionHandler: nil)
   }
 
   func webView(
