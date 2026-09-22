@@ -46,6 +46,7 @@ platform :ios do
       export_method: "app-store",
       destination: "generic/platform=iOS",
       skip_profile_detection: true,
+      xcargs: "CURRENT_PROJECT_VERSION=12 MARKETING_VERSION=1.0.1",
       export_options: {
         method: "app-store",
         signingStyle: "manual",
