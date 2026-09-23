@@ -28,6 +28,7 @@ struct WebContainerView: UIViewControllerRepresentable {
 final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, CLLocationManagerDelegate {
   private let locationManager = CLLocationManager()
   private var webView: WKWebView!
+  private var pendingGeoDecision: ((WKPermissionDecision) -> Void)?
 
   override var prefersStatusBarHidden: Bool { false }
   override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
@@ -37,6 +38,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     super.viewDidLoad()
     view.backgroundColor = screenColor
     locationManager.delegate = self
+    locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
 
     let config = WKWebViewConfiguration()
     config.applicationNameForUserAgent = "AllInRent/1.0"
@@ -48,7 +50,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       document.documentElement.classList.add('air-native-app');
       document.documentElement.style.backgroundColor = '#050B18';
       var css = document.createElement('style');
-      css.textContent = 'html,body{background:#050B18!important}';
+      css.textContent = 'html,body{background:#050B18!important} html.air-native-app footer{display:none!important}';
       document.documentElement.appendChild(css);
     })();
     """
@@ -71,10 +73,6 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     webView.navigationDelegate = self
     webView.uiDelegate = self
     view.addSubview(webView)
-
-    if locationManager.authorizationStatus == .notDetermined {
-      locationManager.requestWhenInUseAuthorization()
-    }
 
     webView.load(URLRequest(url: startURL))
   }
@@ -138,29 +136,28 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       return
     }
 
-    let scheme = url.scheme?.lowercased() ?? ""
-    if ["tel", "mailto", "whatsapp", "sms"].contains(scheme) || url.host == "wa.me" || url.host == "api.whatsapp.com" {
-      UIApplication.shared.open(url)
+    if shouldOpenExternally(url) {
+      openExternally(url)
       decisionHandler(.cancel)
       return
     }
 
+    let scheme = url.scheme?.lowercased() ?? ""
     if scheme == "http" || scheme == "https" {
-      let host = url.host?.lowercased() ?? ""
-      let allowed =
-        host.hasSuffix("all-inrent.com") ||
-        host.contains("stripe.com") ||
-        host.contains("js.stripe.com")
-      if allowed || navigationAction.targetFrame != nil {
+      if isAllowedWebHost(url) {
         decisionHandler(.allow)
         return
       }
-      UIApplication.shared.open(url)
-      decisionHandler(.cancel)
+      if navigationAction.targetFrame == nil {
+        UIApplication.shared.open(url)
+        decisionHandler(.cancel)
+        return
+      }
+      decisionHandler(.allow)
       return
     }
 
-    decisionHandler(.allow)
+    decisionHandler(.cancel)
   }
 
   func webView(
@@ -178,9 +175,93 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     for navigationAction: WKNavigationAction,
     windowFeatures: WKWindowFeatures
   ) -> WKWebView? {
-    if navigationAction.targetFrame == nil, let url = navigationAction.request.url {
-      webView.load(URLRequest(url: url))
+    if let url = navigationAction.request.url, url.absoluteString != "about:blank" {
+      if shouldOpenExternally(url) {
+        openExternally(url)
+      } else if !isAllowedWebHost(url) {
+        UIApplication.shared.open(url)
+      }
     }
     return nil
+  }
+
+  func webView(
+    _ webView: WKWebView,
+    requestGeolocationPermissionFor origin: WKSecurityOrigin,
+    initiatedByFrame frame: WKFrameInfo,
+    decisionHandler: @escaping (WKPermissionDecision) -> Void
+  ) {
+    switch locationManager.authorizationStatus {
+    case .authorizedAlways, .authorizedWhenInUse:
+      decisionHandler(.grant)
+      locationManager.requestLocation()
+    case .denied, .restricted:
+      decisionHandler(.deny)
+    case .notDetermined:
+      pendingGeoDecision = decisionHandler
+      locationManager.requestWhenInUseAuthorization()
+    @unknown default:
+      decisionHandler(.deny)
+    }
+  }
+
+  func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    let status = manager.authorizationStatus
+    if let pending = pendingGeoDecision {
+      pendingGeoDecision = nil
+      switch status {
+      case .authorizedAlways, .authorizedWhenInUse:
+        pending(.grant)
+        manager.requestLocation()
+      default:
+        pending(.deny)
+      }
+      return
+    }
+    if status == .authorizedAlways || status == .authorizedWhenInUse {
+      manager.requestLocation()
+    }
+  }
+
+  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    guard let coordinate = locations.last?.coordinate else { return }
+    injectGeo(coordinate)
+  }
+
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+
+  private func injectGeo(_ coordinate: CLLocationCoordinate2D) {
+    let js = "window.__AIR_GEO={lat:\(coordinate.latitude),lng:\(coordinate.longitude)};"
+    webView.evaluateJavaScript(js, completionHandler: nil)
+  }
+
+  private func isAllowedWebHost(_ url: URL) -> Bool {
+    let host = url.host?.lowercased() ?? ""
+    return host.hasSuffix("all-inrent.com") || host.contains("stripe.com")
+  }
+
+  private func shouldOpenExternally(_ url: URL) -> Bool {
+    let scheme = url.scheme?.lowercased() ?? ""
+    if ["tel", "mailto", "whatsapp", "sms", "allinrent"].contains(scheme) {
+      return true
+    }
+    let host = url.host?.lowercased() ?? ""
+    if host == "wa.me" || host.hasSuffix(".wa.me") {
+      return true
+    }
+    if host.contains("whatsapp.com") || host.contains("whatsapp.net") {
+      return true
+    }
+    return false
+  }
+
+  private func openExternally(_ url: URL) {
+    if url.scheme?.lowercased() == "allinrent" {
+      if let settings = URL(string: UIApplication.openSettingsURLString) {
+        UIApplication.shared.open(settings)
+      }
+      return
+    }
+    UIApplication.shared.open(url)
   }
 }
