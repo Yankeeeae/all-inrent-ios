@@ -19,13 +19,17 @@
   <key>CFBundleShortVersionString</key>
   <string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key>
-  <string>24</string>
+  <string>25</string>
   <key>LSRequiresIPhoneOS</key>
   <true/>
   <key>UILaunchScreen</key>
   <dict>
     <key>UIColorName</key>
     <string>LaunchBackground</string>
+    <key>UIImageName</key>
+    <string>LaunchLogo</string>
+    <key>UIImageRespectsSafeAreaInsets</key>
+    <true/>
   </dict>
   <key>UISupportedInterfaceOrientations</key>
   <array>

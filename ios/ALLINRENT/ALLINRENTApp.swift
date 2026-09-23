@@ -3,7 +3,7 @@ import WebKit
 import CoreLocation
 
 private let startURL = URL(string: "https://www.all-inrent.com/fr")!
-private let screenColor = UIColor(red: 8 / 255, green: 19 / 255, blue: 31 / 255, alpha: 1)
+private let screenColor = UIColor(red: 5 / 255, green: 11 / 255, blue: 24 / 255, alpha: 1)
 
 @main
 struct ALLINRENTApp: App {
@@ -12,7 +12,7 @@ struct ALLINRENTApp: App {
       WebContainerView()
         .ignoresSafeArea(.all)
         .preferredColorScheme(.dark)
-        .background(Color(red: 8 / 255, green: 19 / 255, blue: 31 / 255))
+        .background(Color(red: 5 / 255, green: 11 / 255, blue: 24 / 255))
     }
   }
 }
@@ -39,9 +39,22 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     locationManager.delegate = self
 
     let config = WKWebViewConfiguration()
+    config.applicationNameForUserAgent = "AllInRent/1.0"
     config.allowsInlineMediaPlayback = true
     config.mediaTypesRequiringUserActionForPlayback = []
     config.defaultWebpagePreferences.allowsContentJavaScript = true
+    let bootJS = """
+    (function(){
+      document.documentElement.classList.add('air-native-app');
+      document.documentElement.style.backgroundColor = '#050B18';
+      var css = document.createElement('style');
+      css.textContent = 'html,body{background:#050B18!important}';
+      document.documentElement.appendChild(css);
+    })();
+    """
+    config.userContentController.addUserScript(
+      WKUserScript(source: bootJS, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+    )
 
     webView = WKWebView(frame: view.bounds, configuration: config)
     webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
