@@ -29,6 +29,8 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   private let locationManager = CLLocationManager()
   private var webView: WKWebView!
   private var pendingGeoDecision: ((WKPermissionDecision) -> Void)?
+  private let fadeCover = UIView()
+  private var didFadeCover = false
 
   override var prefersStatusBarHidden: Bool { false }
   override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
@@ -74,12 +76,24 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     webView.uiDelegate = self
     view.addSubview(webView)
 
+    fadeCover.backgroundColor = screenColor
+    fadeCover.frame = view.bounds
+    fadeCover.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    fadeCover.isUserInteractionEnabled = false
+    view.addSubview(fadeCover)
+
     webView.load(URLRequest(url: startURL))
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) { [weak self] in
+      self?.fadeOutCover()
+    }
   }
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
     webView.frame = view.bounds
+    if fadeCover.superview != nil {
+      fadeCover.frame = view.bounds
+    }
     webView.scrollView.contentInset = .zero
     webView.scrollView.scrollIndicatorInsets = .zero
     pushSafeAreaInsets()
@@ -87,6 +101,25 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
 
   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
     pushSafeAreaInsets()
+    fadeOutCover()
+  }
+
+  func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    fadeOutCover()
+  }
+
+  func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    fadeOutCover()
+  }
+
+  private func fadeOutCover() {
+    guard !didFadeCover else { return }
+    didFadeCover = true
+    UIView.animate(withDuration: 0.5, delay: 0.04, options: [.curveEaseOut, .allowUserInteraction]) {
+      self.fadeCover.alpha = 0
+    } completion: { _ in
+      self.fadeCover.removeFromSuperview()
+    }
   }
 
   private func windowSafeArea() -> UIEdgeInsets {
