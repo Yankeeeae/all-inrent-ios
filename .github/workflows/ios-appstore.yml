@@ -29,11 +29,13 @@ jobs:
           xcode-version: latest-stable
 
       - name: Setup Node
+        if: ${{ inputs.skip_binary != true }}
         uses: actions/setup-node@v4
         with:
           node-version: "22"
 
       - name: Capture App Store screenshots
+        if: ${{ inputs.skip_binary != true }}
         working-directory: ios/fastlane
         run: |
           npm init -y
