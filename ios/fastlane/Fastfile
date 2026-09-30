@@ -1,6 +1,7 @@
 default_platform(:ios)
 
 APP_ID = "com.allinrent.app"
+APP_NUMERIC_ID = "6813145770"
 TEAM_ID = "59GW7X6RA6"
 VERSION = "1.0.4"
 BUILD = "29"
@@ -12,6 +13,89 @@ def connect_api_key
     key_filepath: ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH"),
     in_house: false
   )
+end
+
+def spaceship_login!
+  require "spaceship"
+  require "json"
+  require "uri"
+  token = Spaceship::ConnectAPI::Token.create(
+    key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
+    issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+    filepath: ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH")
+  )
+  Spaceship::ConnectAPI.token = token
+  Spaceship::ConnectAPI.client
+end
+
+def ensure_free_pricing!
+  client = spaceship_login!
+  territories = []
+  params = { limit: 200 }
+  loop do
+    res = client.get("territories", params)
+    body = res.is_a?(Hash) ? res : JSON.parse(res.body)
+    territories.concat(Array(body["data"]).map { |row| row["id"] })
+    nxt = body.dig("links", "next")
+    break unless nxt
+    params = { limit: 200, "page[cursor]" => URI.decode_www_form(URI(nxt).query || "").to_h["cursor"] || nxt }
+    break if territories.size > 500
+  end
+  territories.uniq!
+  UI.message("Territoires App Store: #{territories.size}")
+
+  begin
+    client.post("appAvailabilities", {
+      data: {
+        type: "appAvailabilities",
+        attributes: { availableInNewTerritories: true },
+        relationships: {
+          app: { data: { type: "apps", id: APP_NUMERIC_ID } },
+          availableTerritories: {
+            data: territories.map { |id| { type: "territories", id: id } }
+          }
+        }
+      }
+    })
+    UI.success("Disponibilité mondiale enregistrée")
+  rescue => error
+    UI.important("Disponibilité: #{error.message}")
+  end
+
+  points_res = client.get("apps/#{APP_NUMERIC_ID}/appPricePoints", { "filter[territory]" => "FRA", limit: 200 })
+  points_body = points_res.is_a?(Hash) ? points_res : JSON.parse(points_res.body)
+  free = Array(points_body["data"]).find do |point|
+    price = point.dig("attributes", "customerPrice").to_s.tr(",", ".")
+    price == "0" || price == "0.0" || price == "0.00"
+  end
+  UI.user_error!("Aucun palier gratuit trouvé pour FRA") unless free
+  UI.message("Price point gratuit: #{free['id']}")
+
+  begin
+    client.post("appPriceSchedules", {
+      data: {
+        type: "appPriceSchedules",
+        relationships: {
+          app: { data: { type: "apps", id: APP_NUMERIC_ID } },
+          baseTerritory: { data: { type: "territories", id: "FRA" } },
+          manualPrices: { data: [{ type: "appPrices", id: "${price0}" }] }
+        }
+      },
+      included: [
+        {
+          type: "appPrices",
+          id: "${price0}",
+          attributes: { startDate: nil },
+          relationships: {
+            appPricePoint: { data: { type: "appPricePoints", id: free["id"] } }
+          }
+        }
+      ]
+    })
+    UI.success("Tarif gratuit enregistré")
+  rescue => error
+    UI.important("Tarif: #{error.message}")
+  end
 end
 
 platform :ios do
@@ -96,6 +180,7 @@ platform :ios do
     ].find { |path| File.exist?(path) }
     UI.user_error!("rating.json introuvable") unless rating_path
     UI.message("Age rating file: #{rating_path}")
+    ensure_free_pricing!
 
     upload_to_app_store(
       api_key: api_key,
@@ -105,7 +190,6 @@ platform :ios do
       skip_binary_upload: true,
       skip_metadata: false,
       skip_screenshots: true,
-      price_tier: 0,
       force: true,
       submit_for_review: true,
       automatic_release: false,

@@ -1,6 +1,5 @@
 app_identifier("com.allinrent.app")
 platform("ios")
-price_tier(0)
 overwrite_screenshots(true)
 ignore_language_directory_validation(true)
 precheck_include_in_app_purchases(false)
