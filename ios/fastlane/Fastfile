@@ -88,11 +88,19 @@ platform :ios do
   desc "Envoie la fiche App Store et soumet le dernier build à la review"
   lane :submit_review do
     api_key = connect_api_key
+    rating_path = [
+      File.expand_path("fastlane/rating.json"),
+      File.expand_path("rating.json"),
+      File.expand_path("ios/fastlane/rating.json"),
+      File.expand_path("ios/rating.json")
+    ].find { |path| File.exist?(path) }
+    UI.user_error!("rating.json introuvable") unless rating_path
+    UI.message("Age rating file: #{rating_path}")
 
     upload_to_app_store(
       api_key: api_key,
       app_identifier: APP_ID,
-      app_rating_config_path: File.join(__dir__, "rating.json"),
+      app_rating_config_path: rating_path,
       skip_binary_upload: true,
       skip_metadata: false,
       skip_screenshots: false,
