@@ -7,6 +7,10 @@ on:
         description: Soumettre à la review App Store après TestFlight
         type: boolean
         default: true
+      skip_binary:
+        description: Ne pas recompiler (soumettre le build TestFlight déjà uploadé)
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -19,6 +23,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Select Xcode
+        if: ${{ inputs.skip_binary != true }}
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
@@ -44,9 +49,11 @@ jobs:
           printf '%s' "$APP_STORE_CONNECT_API_KEY" > "private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8"
 
       - name: Install XcodeGen
+        if: ${{ inputs.skip_binary != true }}
         run: brew install xcodegen
 
       - name: Generate Xcode project
+        if: ${{ inputs.skip_binary != true }}
         run: |
           xcodegen generate
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 29" ALLINRENT/Info.plist
@@ -57,6 +64,7 @@ jobs:
         run: brew install fastlane
 
       - name: Write signing certificate
+        if: ${{ inputs.skip_binary != true }}
         env:
           DIST_CERT_CER_BASE64: ${{ secrets.DIST_CERT_CER_BASE64 }}
           DIST_CERT_KEY_BASE64: ${{ secrets.DIST_CERT_KEY_BASE64 }}
@@ -75,6 +83,7 @@ jobs:
         continue-on-error: true
 
       - name: Build, TestFlight and submit
+        if: ${{ inputs.skip_binary != true }}
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -83,3 +92,11 @@ jobs:
           P12_PASSWORD: allinrent-ci
           SUBMIT_FOR_REVIEW: ${{ inputs.submit_for_review }}
         run: fastlane release
+
+      - name: Submit existing TestFlight build
+        if: ${{ inputs.skip_binary == true }}
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+        run: fastlane submit_review

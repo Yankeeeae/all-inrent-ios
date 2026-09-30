@@ -5,7 +5,7 @@ submission_information({
   add_id_info_uses_idfa: false,
   export_compliance_uses_encryption: false
 })
-app_rating_config_path("./rating.json")
+app_rating_config_path("./fastlane/rating.json")
 overwrite_screenshots(true)
 ignore_language_directory_validation(true)
 precheck_include_in_app_purchases(false)
