@@ -104,7 +104,7 @@ platform :ios do
       app_rating_config_path: rating_path,
       skip_binary_upload: true,
       skip_metadata: false,
-      skip_screenshots: false,
+      skip_screenshots: true,
       force: true,
       submit_for_review: true,
       automatic_release: false,

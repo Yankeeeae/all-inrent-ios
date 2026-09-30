@@ -61,7 +61,7 @@ jobs:
           plutil -p ALLINRENT/Info.plist | grep CFBundle
 
       - name: Install Fastlane
-        run: brew install fastlane
+        run: sudo gem install fastlane --no-document
 
       - name: Write signing certificate
         if: ${{ inputs.skip_binary != true }}
