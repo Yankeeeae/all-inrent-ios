@@ -181,12 +181,8 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         decisionHandler(.allow)
         return
       }
-      if navigationAction.targetFrame == nil {
-        UIApplication.shared.open(url)
-        decisionHandler(.cancel)
-        return
-      }
-      decisionHandler(.allow)
+      UIApplication.shared.open(url)
+      decisionHandler(.cancel)
       return
     }
 

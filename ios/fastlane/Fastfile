@@ -1,16 +1,24 @@
 default_platform(:ios)
 
+APP_ID = "com.allinrent.app"
+TEAM_ID = "59GW7X6RA6"
+VERSION = "1.0.4"
+BUILD = "29"
+
+def connect_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
+    issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+    key_filepath: ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH"),
+    in_house: false
+  )
+end
+
 platform :ios do
-  desc "Compile et envoie le build sur App Store Connect / TestFlight"
+  desc "Compile et envoie le build sur App Store Connect / TestFlight, puis soumet à la review"
   lane :release do
     setup_ci
-
-    api_key = app_store_connect_api_key(
-      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
-      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
-      key_filepath: ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH"),
-      in_house: false
-    )
+    api_key = connect_api_key
 
     keychain_name = ENV.fetch("MATCH_KEYCHAIN_NAME", "fastlane_tmp_keychain")
     keychain_password = ENV.fetch("MATCH_KEYCHAIN_PASSWORD", "")
@@ -25,7 +33,7 @@ platform :ios do
 
     get_provisioning_profile(
       api_key: api_key,
-      app_identifier: "com.allinrent.app"
+      app_identifier: APP_ID
     )
     profile_name = lane_context[SharedValues::SIGH_NAME]
 
@@ -33,18 +41,18 @@ platform :ios do
       xcodeproj: "ALLINRENT.xcodeproj",
       plist_path: "ALLINRENT/Info.plist",
       block: lambda do |plist|
-        plist["CFBundleVersion"] = "28"
-        plist["CFBundleShortVersionString"] = "1.0.4"
+        plist["CFBundleVersion"] = BUILD
+        plist["CFBundleShortVersionString"] = VERSION
       end
     )
 
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ALLINRENT.xcodeproj",
-      team_id: "59GW7X6RA6",
+      team_id: TEAM_ID,
       code_sign_identity: "Apple Distribution",
       profile_name: profile_name,
-      bundle_identifier: "com.allinrent.app",
+      bundle_identifier: APP_ID,
       targets: ["ALLINRENT"]
     )
 
@@ -55,20 +63,87 @@ platform :ios do
       export_method: "app-store",
       destination: "generic/platform=iOS",
       skip_profile_detection: true,
-      xcargs: "CURRENT_PROJECT_VERSION=28 MARKETING_VERSION=1.0.4",
+      xcargs: "CURRENT_PROJECT_VERSION=#{BUILD} MARKETING_VERSION=#{VERSION}",
       export_options: {
         method: "app-store",
         signingStyle: "manual",
-        teamID: "59GW7X6RA6",
+        teamID: TEAM_ID,
         provisioningProfiles: {
-          "com.allinrent.app" => profile_name
+          APP_ID => profile_name
         }
       }
     )
 
     upload_to_testflight(
       api_key: api_key,
-      skip_waiting_for_build_processing: true
+      skip_waiting_for_build_processing: false,
+      changelog: "ALL IN RENT #{VERSION} (#{BUILD}) — recherche, géolocalisation, contact WhatsApp."
     )
+
+    if ENV.fetch("SUBMIT_FOR_REVIEW", "true") == "true"
+      submit_review
+    end
+  end
+
+  desc "Envoie la fiche App Store et soumet le dernier build à la review"
+  lane :submit_review do
+    api_key = connect_api_key
+
+    upload_to_app_store(
+      api_key: api_key,
+      app_identifier: APP_ID,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      force: true,
+      submit_for_review: true,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        add_id_info_serves_ads: false,
+        add_id_info_tracks_action: false,
+        add_id_info_tracks_install: false,
+        add_id_info_limits_tracking: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_is_exempt: false,
+        export_compliance_encryption_updated: false,
+        content_rights_has_rights: true,
+        content_rights_contains_third_party_content: false
+      }
+    )
+  end
+
+  desc "Affiche l'état App Store Connect"
+  lane :status do
+    api_key = connect_api_key
+    require "spaceship"
+    token = Spaceship::ConnectAPI::Token.create(
+      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+      filepath: ENV.fetch("APP_STORE_CONNECT_API_KEY_PATH")
+    )
+    Spaceship::ConnectAPI.token = token
+    app = Spaceship::ConnectAPI::App.find(APP_ID)
+    UI.user_error!("App #{APP_ID} introuvable sur App Store Connect") unless app
+    UI.success("App: #{app.name} id=#{app.id} bundle=#{app.bundle_id}")
+    versions = Spaceship::ConnectAPI.get_app_store_versions(
+      app_id: app.id,
+      filter: { platform: "IOS" },
+      includes: "appStoreVersionSubmission",
+      limit: 5
+    )
+    versions.each do |v|
+      UI.message("Version #{v.version_string} state=#{v.app_store_state} id=#{v.id}")
+    end
+    builds = Spaceship::ConnectAPI.get_builds(
+      filter: { app: app.id, expired: false, processingState: "VALID" },
+      sort: "-uploadedDate",
+      limit: 5
+    )
+    builds.each do |b|
+      UI.message("Build #{b.version} processing=#{b.processing_state} uploaded=#{b.uploaded_date}")
+    end
   end
 end

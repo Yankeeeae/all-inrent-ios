@@ -2,5 +2,9 @@
 AuthKey_*.p8
 ios/private_keys/
 ios/build/
+ios/fastlane/node_modules/
+ios/fastlane/package.json
+ios/fastlane/package-lock.json
+ios/fastlane/screenshots/
 .DS_Store
 

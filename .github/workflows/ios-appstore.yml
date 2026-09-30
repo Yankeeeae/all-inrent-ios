@@ -2,6 +2,11 @@ name: iOS App Store
 
 on:
   workflow_dispatch:
+    inputs:
+      submit_for_review:
+        description: Soumettre à la review App Store après TestFlight
+        type: boolean
+        default: true
 
 jobs:
   build:
@@ -18,6 +23,19 @@ jobs:
         with:
           xcode-version: latest-stable
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Capture App Store screenshots
+        working-directory: ios/fastlane
+        run: |
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install chromium
+          node capture-screenshots.mjs
+
       - name: Write App Store Connect API key
         env:
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
@@ -31,7 +49,7 @@ jobs:
       - name: Generate Xcode project
         run: |
           xcodegen generate
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 28" ALLINRENT/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 29" ALLINRENT/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.4" ALLINRENT/Info.plist
           plutil -p ALLINRENT/Info.plist | grep CFBundle
 
@@ -48,11 +66,20 @@ jobs:
           openssl x509 -inform DER -in dist.cer -out dist.pem
           openssl pkcs12 -export -inkey dist.key -in dist.pem -out ios_distribution.p12 -passout pass:allinrent-ci
 
-      - name: Build and upload
+      - name: App Store Connect status
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+        run: fastlane status
+        continue-on-error: true
+
+      - name: Build, TestFlight and submit
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
           P12_PATH: ${{ github.workspace }}/ios/ios_distribution.p12
           P12_PASSWORD: allinrent-ci
+          SUBMIT_FOR_REVIEW: ${{ inputs.submit_for_review }}
         run: fastlane release

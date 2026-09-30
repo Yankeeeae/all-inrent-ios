@@ -19,7 +19,7 @@
   <key>CFBundleShortVersionString</key>
   <string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key>
-  <string>26</string>
+  <string>29</string>
   <key>LSRequiresIPhoneOS</key>
   <true/>
   <key>UILaunchScreen</key>
@@ -53,8 +53,6 @@
   <string>Pour ajouter des photos de véhicules et de votre agence.</string>
   <key>NSCameraUsageDescription</key>
   <string>Pour prendre des photos de vos véhicules directement depuis l'app.</string>
-  <key>NSUserTrackingUsageDescription</key>
-  <string>Pour mesurer l'efficacité de nos publicités et améliorer votre expérience.</string>
   <key>LSApplicationQueriesSchemes</key>
   <array>
     <string>whatsapp</string>
