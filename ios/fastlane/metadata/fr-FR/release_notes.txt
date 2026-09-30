@@ -1,2 +1,2 @@
-﻿Première version sur l'App Store.
+Première version sur l'App Store.
 Recherche par ville et budget, fiches véhicules, contact WhatsApp, géolocalisation.

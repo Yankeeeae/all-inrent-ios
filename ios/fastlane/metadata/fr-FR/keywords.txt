@@ -1,1 +1,1 @@
-﻿location,voiture,luxe,moto,yacht,chauffeur,VTC,premium,Paris,rent
+location,voiture,luxe,moto,yacht,chauffeur,VTC,premium,Paris,rent
