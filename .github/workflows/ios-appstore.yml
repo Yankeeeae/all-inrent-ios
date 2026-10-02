@@ -36,6 +36,7 @@ jobs:
 
       - name: Capture App Store screenshots
         if: ${{ inputs.skip_binary != true }}
+        continue-on-error: true
         working-directory: ios/fastlane
         run: |
           npm init -y

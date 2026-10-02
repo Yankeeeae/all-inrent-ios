@@ -14,7 +14,7 @@ const shots = [
   { file: "01_accueil.png", url: "https://www.all-inrent.com/fr" },
   { file: "02_vehicules.png", url: "https://www.all-inrent.com/fr/vehicules" },
   { file: "03_fiche.png", url: "https://www.all-inrent.com/fr/vehicules" },
-  { file: "04_agences.png", url: "https://www.all-inrent.com/fr/agences" },
+  { file: "04_favoris.png", url: "https://www.all-inrent.com/fr/favoris" },
   { file: "05_contact.png", url: "https://www.all-inrent.com/fr/contact" },
 ];
 
@@ -60,8 +60,18 @@ for (const size of sizes) {
       const destDir = path.join(__dirname, "screenshots", locale);
       fs.mkdirSync(destDir, { recursive: true });
       const dest = path.join(destDir, `${size.dir}_${shot.file}`);
-      await page.screenshot({ path: dest, type: "png", fullPage: false });
-      console.log(`OK ${locale}/${path.basename(dest)} (${fs.statSync(dest).size} bytes)`);
+      try {
+        await page.screenshot({
+          path: dest,
+          type: "png",
+          fullPage: false,
+          timeout: 15000,
+          animations: "disabled",
+        });
+        console.log(`OK ${locale}/${path.basename(dest)} (${fs.statSync(dest).size} bytes)`);
+      } catch (error) {
+        console.warn(`SKIP ${locale}/${path.basename(dest)}: ${error.message}`);
+      }
     }
   }
   await context.close();
