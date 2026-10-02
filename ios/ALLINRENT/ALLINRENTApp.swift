@@ -52,7 +52,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       document.documentElement.classList.add('air-native-app');
       document.documentElement.style.backgroundColor = '#050B18';
       var css = document.createElement('style');
-      css.textContent = 'html,body{background:#050B18!important} html.air-native-app footer{display:none!important}';
+      css.textContent = 'html,body{background:#050B18!important} html.air-native-app footer{display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important}';
       document.documentElement.appendChild(css);
     })();
     """
@@ -177,7 +177,16 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
 
     let scheme = url.scheme?.lowercased() ?? ""
     if scheme == "http" || scheme == "https" {
+      if isTikTokHost(url) {
+        decisionHandler(.cancel)
+        return
+      }
       if isAllowedWebHost(url) {
+        if isConsumerBlockedPath(url) {
+          webView.load(URLRequest(url: startURL))
+          decisionHandler(.cancel)
+          return
+        }
         decisionHandler(.allow)
         return
       }
@@ -207,6 +216,10 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     if let url = navigationAction.request.url, url.absoluteString != "about:blank" {
       if shouldOpenExternally(url) {
         openExternally(url)
+      } else if isTikTokHost(url) {
+        return nil
+      } else if isAllowedWebHost(url), isConsumerBlockedPath(url) {
+        webView.load(URLRequest(url: startURL))
       } else if !isAllowedWebHost(url) {
         UIApplication.shared.open(url)
       }
@@ -267,6 +280,28 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   private func isAllowedWebHost(_ url: URL) -> Bool {
     let host = url.host?.lowercased() ?? ""
     return host.hasSuffix("all-inrent.com") || host.contains("stripe.com")
+  }
+
+  private func isTikTokHost(_ url: URL) -> Bool {
+    let host = url.host?.lowercased() ?? ""
+    return host == "tiktok.com" || host.hasSuffix(".tiktok.com")
+  }
+
+  private func pathWithoutLocale(_ path: String) -> String {
+    let locales = ["fr", "en", "es", "de", "it", "pt", "zh", "ru", "ar"]
+    let parts = path.lowercased().split(separator: "/", omittingEmptySubsequences: true).map(String.init)
+    guard let first = parts.first, locales.contains(first) else {
+      return path.isEmpty ? "/" : path
+    }
+    let rest = parts.dropFirst().joined(separator: "/")
+    return rest.isEmpty ? "/" : "/\(rest)"
+  }
+
+  private func isConsumerBlockedPath(_ url: URL) -> Bool {
+    let rest = pathWithoutLocale(url.path)
+    if rest == "/agences" { return true }
+    let blocked = ["/publier", "/agency", "/admin", "/reseaux-sociaux"]
+    return blocked.contains { rest == $0 || rest.hasPrefix("\($0)/") }
   }
 
   private func shouldOpenExternally(_ url: URL) -> Bool {

@@ -1,2 +1,1 @@
-Première version sur l'App Store.
-Recherche par ville et budget, fiches véhicules, contact WhatsApp, géolocalisation.
+Catalogue : recherche, fiches, favoris et WhatsApp. Pas de compte, pas de TikTok, pas d’espace agence.

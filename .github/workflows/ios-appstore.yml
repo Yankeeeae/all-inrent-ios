@@ -58,8 +58,8 @@ jobs:
         if: ${{ inputs.skip_binary != true }}
         run: |
           xcodegen generate
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 29" ALLINRENT/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.4" ALLINRENT/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 30" ALLINRENT/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.5" ALLINRENT/Info.plist
           plutil -p ALLINRENT/Info.plist | grep CFBundle
 
       - name: Install Fastlane

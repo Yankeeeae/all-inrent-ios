@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const APP_ID = "6813145770";
-const VERSION = "1.0.4";
+const VERSION = "1.0.5";
 const KEY_ID = process.env.APP_STORE_CONNECT_KEY_ID;
 const ISSUER = process.env.APP_STORE_CONNECT_ISSUER_ID;
 const KEY_PATH = process.env.APP_STORE_CONNECT_API_KEY_PATH;
