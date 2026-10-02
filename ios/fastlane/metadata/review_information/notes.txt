@@ -1,1 +1,38 @@
-L'application affiche le site mobile all-inrent.com dans une WebView native (WKWebView) limitée au domaine all-inrent.com et à Stripe. La géolocalisation sert à afficher les véhicules près de l'utilisateur. WhatsApp, téléphone et e-mail s'ouvrent dans les apps système. Aucun compte n'est obligatoire pour consulter les annonces. Les agences créent un compte via Espace agence. Politique de confidentialité : https://www.all-inrent.com/fr/confidentialite
+ALL IN RENT (com.allinrent.app) — App Review notes for Guideline 2.1
+
+PURPOSE AND AUDIENCE
+ALL IN RENT is a consumer marketplace to discover luxury cars, motorcycles, yachts and chauffeur services offered by independent rental agencies, then contact the agency on WhatsApp or phone to book a real-world rental. Target users: travelers and individuals looking for premium rentals (Paris, Cannes, Marrakech, Dubai, Los Angeles, etc.). The app replaces scattered Instagram/WhatsApp agency hunting with one catalog of photos, prices and verified agency profiles.
+
+NO CONSUMER ACCOUNT
+Search, listing details, favorites and contacting an agency work with no registration. Favorites are stored locally on the device. There is no consumer sign-up, login or account deletion because no consumer account exists. Ratings shown on listings are curated by our team; end users cannot post public content, comments or listings in the app. There is no in-app purchase and no paid digital content for consumers.
+
+AGENCY AREA (B2B, NOT REQUIRED FOR REVIEW)
+"Publier" and /agency are for professional rental companies that already operate a fleet. App Review does not need this. Please do not create an agency account. Sign-In Required is OFF. No demo username/password.
+
+HOW TO USE THE APP
+1. Launch ALL IN RENT from the Home Screen.
+2. Home: browse vehicles and city rails.
+3. Search: enter a city and/or budget, tap the blue search button.
+4. Open any listing: photos, price, agency name.
+5. Tap the heart to save a favorite, then open Favorites.
+6. Tap WhatsApp (or phone) to contact the agency — you may cancel before sending.
+7. If iOS asks for Location, choose Allow Once to see nearby vehicles.
+Privacy: https://www.all-inrent.com/fr/confidentialite
+Support: allinrent.off@gmail.com / +33 767 501 697
+
+EXTERNAL SERVICES
+- https://www.all-inrent.com (same catalog in WKWebView, domain-locked)
+- Supabase: vehicle/agency database and listing photos
+- Stripe Checkout: optional B2B agency listing subscription on the website only (not a consumer purchase; no IAP products)
+- WhatsApp, Phone, Mail: opened in system apps
+- Core Location: nearby-vehicle ranking
+- Production hosting: our VPS serving all-inrent.com
+
+REGIONS
+Features are the same in all App Store territories. Available vehicles differ by city. UI languages: French (default), English, Spanish, German, Italian, Portuguese, Chinese, Russian, Arabic.
+
+REGULATED / THIRD-PARTY MATERIAL
+We are a discovery and contact marketplace, not a rental operator. Each listing is published by the partner agency that owns or operates the vehicle. Photos and copy are supplied by those agencies. We do not provide banking, insurance underwriting, gambling or medical services.
+
+SCREEN RECORDING
+Physical iPhone, latest iOS, starts at Home Screen launch: catalog → search → listing → favorite → WhatsApp (cancel before send) → optional Location. No account, no IAP, no UGC posting. Attach the recording in Resolution Center.

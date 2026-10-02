@@ -1,0 +1,28 @@
+name: iOS App Review notes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Write App Store Connect API key
+        env:
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          mkdir -p private_keys
+          printf '%s' "$APP_STORE_CONNECT_API_KEY" > "private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8"
+
+      - name: Update App Review notes
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+        run: node fastlane/update-review-notes.mjs
