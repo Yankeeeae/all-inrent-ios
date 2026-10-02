@@ -132,52 +132,36 @@ for (const v of versions.json.data || []) {
   }
 }
 
-const created = await api("POST", "appStoreVersionSubmissions", {
+const created = await api("POST", "reviewSubmissions", {
   data: {
-    type: "appStoreVersionSubmissions",
+    type: "reviewSubmissions",
+    attributes: { platform: "IOS" },
     relationships: {
+      app: { data: { type: "apps", id: APP_ID } },
+    },
+  },
+});
+if (!created.ok) process.exit(1);
+
+const reviewId = created.json.data?.id;
+const item = await api("POST", "reviewSubmissionItems", {
+  data: {
+    type: "reviewSubmissionItems",
+    relationships: {
+      reviewSubmission: { data: { type: "reviewSubmissions", id: reviewId } },
       appStoreVersion: { data: { type: "appStoreVersions", id: target.id } },
     },
   },
 });
+if (!item.ok) process.exit(1);
 
-if (created.ok) {
-  console.log(`OK soumis ${VERSION} id=${target.id}`);
-  process.exit(0);
-}
+const submitted = await api("PATCH", `reviewSubmissions/${reviewId}`, {
+  data: {
+    type: "reviewSubmissions",
+    id: reviewId,
+    attributes: { submitted: true },
+  },
+});
+if (!submitted.ok) process.exit(1);
 
-if (created.status === 409) {
-  const review = await api("POST", "reviewSubmissions", {
-    data: {
-      type: "reviewSubmissions",
-      attributes: { platform: "IOS" },
-      relationships: {
-        app: { data: { type: "apps", id: APP_ID } },
-      },
-    },
-  });
-  if (!review.ok) process.exit(1);
-  const reviewId = review.json.data?.id;
-  const item = await api("POST", "reviewSubmissionItems", {
-    data: {
-      type: "reviewSubmissionItems",
-      relationships: {
-        reviewSubmission: { data: { type: "reviewSubmissions", id: reviewId } },
-        appStoreVersion: { data: { type: "appStoreVersions", id: target.id } },
-      },
-    },
-  });
-  if (!item.ok) process.exit(1);
-  const submitted = await api("PATCH", `reviewSubmissions/${reviewId}`, {
-    data: {
-      type: "reviewSubmissions",
-      id: reviewId,
-      attributes: { submitted: true },
-    },
-  });
-  if (!submitted.ok) process.exit(1);
-  console.log(`OK reviewSubmission ${reviewId} pour ${VERSION}`);
-  process.exit(0);
-}
-
-process.exit(1);
+console.log(`OK reviewSubmission ${reviewId} pour ${VERSION} (${target.id})`);
