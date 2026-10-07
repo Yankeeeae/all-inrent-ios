@@ -81,6 +81,27 @@ if (!target) {
   process.exit(1);
 }
 
+function reviewState(item) {
+  return item.attributes?.state;
+}
+
+function isTerminalReview(item) {
+  const state = reviewState(item);
+  return state === "COMPLETE" || state === "CANCELED" || state === "COMPLETING";
+}
+
+function isBlockingReview(item) {
+  return !isTerminalReview(item);
+}
+
+async function listReviews() {
+  return api("GET", `apps/${APP_ID}/reviewSubmissions?filter[platform]=IOS&limit=20`);
+}
+
+async function sleep(ms) {
+  await new Promise((r) => setTimeout(r, ms));
+}
+
 const existingSubmission = await api(
   "GET",
   `appStoreVersions/${target.id}/appStoreVersionSubmission`
@@ -91,24 +112,14 @@ if (existingSubmission.ok && existingSubmission.json.data?.id) {
   await api("DELETE", `appStoreVersionSubmissions/${subId}`);
 }
 
-const reviews = await api(
-  "GET",
-  `apps/${APP_ID}/reviewSubmissions?filter[platform]=IOS&limit=20`
-);
+let reviews = await listReviews();
 if (reviews.ok) {
   for (const item of reviews.json.data || []) {
     const state = item.attributes?.state;
-    const canceled = item.attributes?.canceled;
-    console.log(`ReviewSubmission ${item.id} state=${state} canceled=${canceled}`);
-    if (canceled) continue;
-    if (
-      state === "COMPLETE" ||
-      state === "COMPLETING" ||
-      state === "CANCELED" ||
-      state === "CANCELING"
-    ) {
-      continue;
-    }
+    console.log(
+      `ReviewSubmission ${item.id} state=${state} canceled=${item.attributes?.canceled}`
+    );
+    if (isTerminalReview(item) || state === "CANCELING") continue;
     const cancel = await api("PATCH", `reviewSubmissions/${item.id}`, {
       data: {
         type: "reviewSubmissions",
@@ -117,9 +128,22 @@ if (reviews.ok) {
       },
     });
     if (!cancel.ok) {
-      console.log(`Annulation reviewSubmission ${item.id} (${state}) ignorée, on continue`);
+      console.log(`Annulation reviewSubmission ${item.id} (${state}) ignorée`);
     }
   }
+}
+
+for (let i = 0; i < 12; i++) {
+  await sleep(5000);
+  reviews = await listReviews();
+  const blocking = (reviews.json.data || []).filter((item) => isBlockingReview(item));
+  if (blocking.length === 0) {
+    console.log("Aucune reviewSubmission ouverte");
+    break;
+  }
+  console.log(
+    `Attente libération reviewSubmission (${blocking.map((b) => `${b.id}:${b.attributes?.state}`).join(", ")})`
+  );
 }
 
 for (const v of versions.json.data || []) {
@@ -133,27 +157,46 @@ for (const v of versions.json.data || []) {
   }
 }
 
-const created = await api("POST", "reviewSubmissions", {
-  data: {
-    type: "reviewSubmissions",
-    attributes: { platform: "IOS" },
-    relationships: {
-      app: { data: { type: "apps", id: APP_ID } },
-    },
-  },
-});
-if (!created.ok) process.exit(1);
+reviews = await listReviews();
+let reviewId = (reviews.json.data || []).find(
+  (item) => item.attributes?.state === "READY_FOR_REVIEW" && item.attributes?.canceled !== true
+)?.id;
 
-const reviewId = created.json.data?.id;
-const item = await api("POST", "reviewSubmissionItems", {
-  data: {
-    type: "reviewSubmissionItems",
-    relationships: {
-      reviewSubmission: { data: { type: "reviewSubmissions", id: reviewId } },
-      appStoreVersion: { data: { type: "appStoreVersions", id: target.id } },
+if (!reviewId) {
+  const created = await api("POST", "reviewSubmissions", {
+    data: {
+      type: "reviewSubmissions",
+      attributes: { platform: "IOS" },
+      relationships: {
+        app: { data: { type: "apps", id: APP_ID } },
+      },
     },
-  },
-});
+  });
+  if (!created.ok) process.exit(1);
+  reviewId = created.json.data?.id;
+}
+
+let item = { ok: false };
+for (let attempt = 0; attempt < 8; attempt++) {
+  item = await api("POST", "reviewSubmissionItems", {
+    data: {
+      type: "reviewSubmissionItems",
+      relationships: {
+        reviewSubmission: { data: { type: "reviewSubmissions", id: reviewId } },
+        appStoreVersion: { data: { type: "appStoreVersions", id: target.id } },
+      },
+    },
+  });
+  if (item.ok) break;
+  const code = item.json?.errors?.[0]?.code || "";
+  const associated = JSON.stringify(item.json?.errors || {});
+  if (associated.includes("ITEM_PART_OF_ANOTHER_SUBMISSION") || code.includes("STATE_ERROR")) {
+    console.log(`Item pas encore libre, nouvelle tentative ${attempt + 1}/8`);
+    await sleep(8000);
+    continue;
+  }
+  break;
+}
 if (!item.ok) process.exit(1);
 
 const submitted = await api("PATCH", `reviewSubmissions/${reviewId}`, {
