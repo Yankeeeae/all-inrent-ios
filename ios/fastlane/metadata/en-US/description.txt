@@ -1,9 +1,11 @@
 ALL IN RENT — premium vehicle and service rentals.
 
-Browse luxury cars, motorcycles, yachts and chauffeur services. Contact agencies directly via WhatsApp. No account required.
+Browse luxury cars, motorcycles, yachts and chauffeur services. Request a vehicle in the app — the agency calls or emails you back. No account required.
 
 • Search by city, category and budget
-• Listing photos, prices and verified agency profiles
+• Listing photos, prices and agency profiles
+• In-app booking request (no WhatsApp required)
+• Optional phone call to the agency
 • Location-based discovery
 • Favorites saved on your device
 • Wedding & events providers

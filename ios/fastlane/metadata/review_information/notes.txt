@@ -1,30 +1,43 @@
-ALL IN RENT (com.allinrent.app) — App Review notes for Guideline 2.1
+ALL IN RENT 1.0.6 — App Review notes (Guidelines 4.2 and 5.1.2)
 
 NO ACCOUNT IN THIS APP
-The iOS app is a consumer catalog only. Search, listing details, favorites and contacting an agency work with no registration. There is no Sign Up, Sign In, account creation, account deletion, username or password. Favorites are stored locally on the device. Please do not look for a new-account form: it does not exist in this binary.
+Consumer catalog only. Search, listing details, favorites and in-app contact work with no registration. There is no Sign Up / Sign In. Favorites are stored locally. Please do not look for a new-account form.
+
+GUIDELINE 4.2 — IN-APP CONTACT (WhatsApp is not required)
+Contact is fully in-app. On any listing:
+1. Launch ALL IN RENT.
+2. If welcome slides appear, tap Skip (top right).
+3. Home: browse vehicles (cars, motorcycles, yachts, chauffeur).
+4. Open any listing (photos, price, agency).
+5. Tap “Contacter” / “Envoyer une demande” (blue button at the bottom).
+6. Fill first name, phone and email, then tap “Envoyer ma demande”.
+7. You stay in the app: confirmation “Demande envoyée”. The agency receives the request by email/dashboard. WhatsApp is not opened and is not required.
+8. Optional: “Appeler” uses the iOS Phone app (tel:). Cancel if you do not want to place a call.
+9. Heart icon saves a favorite locally; open Favorites from the header.
+
+The previous build opened WhatsApp after the form. This build does not.
+
+GUIDELINE 5.1.2 — THIS iOS APP DOES NOT TRACK
+We do not use App Tracking Transparency because the iOS app does not track.
+- No IDFA / no advertising identifier (submission_information add_id_info_uses_idfa = false).
+- Meta Pixel, Google Analytics, Google Ads and Facebook CAPI are disabled in the native WebView (User-Agent AllInRent/1.0).
+- WKContentRuleList blocks facebook/gtm/GA/ads hosts.
+- Name, email and phone from the in-app request are first-party only, used to put the traveler in contact with the rental agency (App Functionality). They are not linked to third-party data for advertising and are not shared with a data broker.
+
+Please update / confirm App Privacy: “Does this app track users?” = No. Do not mark Name, Email, Phone, Device ID, Advertising Data, Physical Address or Product Interaction as used for Tracking.
 
 DO NOT USE WEBSITE AGENCY TOOLS
-"Publier", /agency, /admin and the agency landing are website-only B2B tools for rental companies. They are hidden and blocked inside this iOS app. App Review does not need them. Sign-In Required is OFF. No demo username/password. Camera and photo library are not used.
+Publier, /agency, /admin are website-only B2B tools, blocked in this binary. Sign-In Required is OFF. Camera and photo library are not used.
 
-HOW TO USE (physical iPhone)
-1. Launch ALL IN RENT from the Home Screen.
-2. If welcome slides appear, tap Skip (top right) — they are optional, not an account.
-3. Home: browse vehicles and city rails. No TikTok feed.
-4. Search: enter a city and/or budget, tap the blue search button.
-5. Open any listing: photos, price, agency name.
-6. Tap the heart to save a favorite, then open Favorites.
-7. Tap WhatsApp (or phone) to contact the agency — cancel before sending.
-8. If iOS asks for Location, choose Allow Once to see nearby vehicles.
-
-PURPOSE
-Marketplace to discover luxury cars, motorcycles, yachts and chauffeur services from independent agencies, then contact the agency on WhatsApp or phone. Target users: travelers looking for premium rentals (Paris, Cannes, Marrakech, Dubai, Los Angeles, etc.).
+LOCATION
+If iOS asks for Location, Allow Once to rank nearby vehicles. Optional.
 
 EXTERNAL SERVICES
-- https://www.all-inrent.com (same catalog in WKWebView, domain-locked)
-- Supabase: vehicle/agency database and listing photos
-- WhatsApp, Phone, Mail: opened in system apps
-- Core Location: nearby-vehicle ranking only
-- Stripe exists on the website for B2B agency subscriptions, not in this consumer app, no IAP
+- https://www.all-inrent.com (catalog in WKWebView, domain-locked)
+- Supabase: vehicle/agency database and photos
+- First-party lead API for in-app requests
+- Phone / Mail: optional system apps
+- Stripe exists on the website for B2B agency subscriptions only — no IAP in this app
 
 Privacy: https://www.all-inrent.com/fr/confidentialite
 Support: allinrent.off@gmail.com / +33 767 501 697

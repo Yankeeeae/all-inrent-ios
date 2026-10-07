@@ -51,6 +51,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     (function(){
       document.documentElement.classList.add('air-native-app');
       document.documentElement.style.backgroundColor = '#050B18';
+      window.fbq = function(){};
+      window._fbq = function(){};
+      window.gtag = function(){};
       var css = document.createElement('style');
       css.textContent = 'html,body{background:#050B18!important} html.air-native-app footer{display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important}';
       document.documentElement.appendChild(css);
@@ -82,9 +85,42 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     fadeCover.isUserInteractionEnabled = false
     view.addSubview(fadeCover)
 
-    webView.load(URLRequest(url: startURL))
+    installAdBlockerThenLoad()
     DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) { [weak self] in
       self?.fadeOutCover()
+    }
+  }
+
+  private func installAdBlockerThenLoad() {
+    var didLoad = false
+    func loadOnce() {
+      guard !didLoad else { return }
+      didLoad = true
+      webView.load(URLRequest(url: startURL))
+    }
+    let rules: String
+    if let url = Bundle.main.url(forResource: "ContentBlocker", withExtension: "json"),
+       let data = try? String(contentsOf: url, encoding: .utf8) {
+      rules = data
+    } else {
+      rules = """
+      [{"trigger":{"url-filter":"connect\\\\.facebook\\\\.net"},"action":{"type":"block"}},{"trigger":{"url-filter":"facebook\\\\.com/tr"},"action":{"type":"block"}},{"trigger":{"url-filter":"doubleclick\\\\.net"},"action":{"type":"block"}},{"trigger":{"url-filter":"googleadservices\\\\.com"},"action":{"type":"block"}},{"trigger":{"url-filter":"googletagmanager\\\\.com"},"action":{"type":"block"}},{"trigger":{"url-filter":"google-analytics\\\\.com"},"action":{"type":"block"}}]
+      """
+    }
+    let controller = webView.configuration.userContentController
+    WKContentRuleListStore.default().compileContentRuleList(
+      forIdentifier: "air-no-ads",
+      encodedContentRuleList: rules
+    ) { list, _ in
+      DispatchQueue.main.async {
+        if let list {
+          controller.add(list)
+        }
+        loadOnce()
+      }
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+      loadOnce()
     }
   }
 

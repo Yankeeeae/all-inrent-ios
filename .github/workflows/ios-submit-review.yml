@@ -20,10 +20,10 @@ jobs:
           mkdir -p private_keys
           printf '%s' "$APP_STORE_CONNECT_API_KEY" > "private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8"
 
-      - name: Submit 1.0.5 for review
+      - name: Submit 1.0.6 for review
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
-          APP_STORE_VERSION: "1.0.5"
+          APP_STORE_VERSION: "1.0.6"
         run: node fastlane/submit-review.mjs

@@ -3,8 +3,8 @@ default_platform(:ios)
 APP_ID = "com.allinrent.app"
 APP_NUMERIC_ID = "6813145770"
 TEAM_ID = "59GW7X6RA6"
-VERSION = "1.0.5"
-BUILD = "30"
+VERSION = "1.0.6"
+BUILD = "31"
 
 def connect_api_key
   app_store_connect_api_key(
@@ -78,7 +78,7 @@ platform :ios do
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: false,
-      changelog: "ALL IN RENT #{VERSION} (#{BUILD}) — recherche, géolocalisation, contact WhatsApp."
+      changelog: "ALL IN RENT #{VERSION} (#{BUILD}) — demande in-app, recherche, favoris. Pas de tracking pub."
     )
 
     if ENV.fetch("SUBMIT_FOR_REVIEW", "true") == "true"

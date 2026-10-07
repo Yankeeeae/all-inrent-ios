@@ -1,0 +1,38 @@
+[
+  {
+    "trigger": { "url-filter": "connect\\.facebook\\.net" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "facebook\\.com/tr" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "facebook\\.net" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "doubleclick\\.net" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "googleadservices\\.com" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "googlesyndication\\.com" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "googletagmanager\\.com" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "google-analytics\\.com" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "adservice\\.google" },
+    "action": { "type": "block" }
+  }
+]

@@ -2,7 +2,7 @@ import { createSign } from "node:crypto";
 import { readFileSync } from "node:fs";
 
 const APP_ID = "6813145770";
-const VERSION = process.env.APP_STORE_VERSION || "1.0.5";
+const VERSION = process.env.APP_STORE_VERSION || "1.0.6";
 const KEY_ID = process.env.APP_STORE_CONNECT_KEY_ID;
 const ISSUER = process.env.APP_STORE_CONNECT_ISSUER_ID;
 const KEY_PATH = process.env.APP_STORE_CONNECT_API_KEY_PATH;

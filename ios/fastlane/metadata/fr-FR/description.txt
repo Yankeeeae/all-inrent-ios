@@ -4,8 +4,9 @@ Découvrez des véhicules de luxe, motos, yachts et services chauffeur près de 
 
 FONCTIONNALITÉS
 • Recherche par ville, catégorie et budget
-• Fiches détaillées avec photos et prix
-• Contact direct WhatsApp avec les agences
+• Fiches détaillées avec photos, prix et agence
+• Demande de réservation directement dans l’app (l’agence vous rappelle)
+• Appel optionnel vers l’agence
 • Géolocalisation pour trouver les offres à proximité
 • Favoris enregistrés sur l’appareil
 • Mariage & événements : prestataires premium
