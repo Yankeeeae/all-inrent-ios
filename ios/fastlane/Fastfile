@@ -108,6 +108,7 @@ platform :ios do
       skip_screenshots: true,
       force: true,
       submit_for_review: true,
+      reject_if_possible: true,
       automatic_release: false,
       precheck_include_in_app_purchases: false,
       run_precheck_before_submit: false,

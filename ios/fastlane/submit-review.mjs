@@ -102,21 +102,22 @@ if (reviews.ok) {
     console.log(`ReviewSubmission ${item.id} state=${state} canceled=${canceled}`);
     if (canceled) continue;
     if (
-      state === "READY_FOR_REVIEW" ||
-      state === "WAITING_FOR_REVIEW" ||
-      state === "UNRESOLVED_ISSUES" ||
-      state === "IN_REVIEW"
+      state === "COMPLETE" ||
+      state === "COMPLETING" ||
+      state === "CANCELED" ||
+      state === "CANCELING"
     ) {
-      const cancel = await api("PATCH", `reviewSubmissions/${item.id}`, {
-        data: {
-          type: "reviewSubmissions",
-          id: item.id,
-          attributes: { canceled: true },
-        },
-      });
-      if (!cancel.ok && state !== "IN_REVIEW") {
-        console.log("Annulation reviewSubmission ignorée, on continue");
-      }
+      continue;
+    }
+    const cancel = await api("PATCH", `reviewSubmissions/${item.id}`, {
+      data: {
+        type: "reviewSubmissions",
+        id: item.id,
+        attributes: { canceled: true },
+      },
+    });
+    if (!cancel.ok) {
+      console.log(`Annulation reviewSubmission ${item.id} (${state}) ignorée, on continue`);
     }
   }
 }
