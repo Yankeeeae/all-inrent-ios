@@ -1,1 +1,1 @@
-Écran de chargement à chaque ouverture. Accueil mobile mis à jour. Recherche, fiches et favoris. Pas de tracking publicitaire.
+Écran de démarrage AIR (logo + chargement). Accueil mobile Côte d’Azur. Recherche, fiches et favoris.

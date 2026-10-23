@@ -149,31 +149,25 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     bootOverlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     bootOverlay.isUserInteractionEnabled = false
 
-    let logo = UIImageView(image: UIImage(named: "LaunchLogo"))
+    let logo = UIImageView(image: UIImage(named: "BootLogo") ?? UIImage(named: "LaunchLogo"))
     logo.translatesAutoresizingMaskIntoConstraints = false
     logo.contentMode = .scaleAspectFit
 
     bootSpinner.translatesAutoresizingMaskIntoConstraints = false
-    bootSpinner.color = .white
+    bootSpinner.color = UIColor(red: 24 / 255, green: 119 / 255, blue: 242 / 255, alpha: 1)
     bootSpinner.startAnimating()
 
-    let label = UILabel()
-    label.translatesAutoresizingMaskIntoConstraints = false
-    label.text = "Chargement…"
-    label.textColor = .white
-    label.font = .systemFont(ofSize: 15, weight: .semibold)
-
-    let stack = UIStackView(arrangedSubviews: [logo, bootSpinner, label])
+    let stack = UIStackView(arrangedSubviews: [logo, bootSpinner])
     stack.translatesAutoresizingMaskIntoConstraints = false
     stack.axis = .vertical
     stack.alignment = .center
-    stack.spacing = 16
+    stack.spacing = 28
     bootOverlay.addSubview(stack)
     view.addSubview(bootOverlay)
 
     NSLayoutConstraint.activate([
-      logo.widthAnchor.constraint(equalToConstant: 96),
-      logo.heightAnchor.constraint(equalToConstant: 96),
+      logo.widthAnchor.constraint(equalToConstant: 168),
+      logo.heightAnchor.constraint(equalToConstant: 56),
       stack.centerXAnchor.constraint(equalTo: bootOverlay.centerXAnchor),
       stack.centerYAnchor.constraint(equalTo: bootOverlay.centerYAnchor)
     ])

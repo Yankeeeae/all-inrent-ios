@@ -1,1 +1,1 @@
-Loading screen on every launch. Updated mobile home. Search, listings and favorites. No advertising tracking.
+AIR launch screen (logo + loading). Updated mobile home. Search, listings and favorites.
