@@ -30,8 +30,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   private var webView: WKWebView!
   private var pendingGeoDecision: ((WKPermissionDecision) -> Void)?
   private let bootOverlay = UIView()
-  private let bootSpinner = UIActivityIndicatorView(style: .large)
+  private let bootRing = BootRingView()
   private var didHideBoot = false
+  private var bootShownAt = Date()
 
   override var prefersStatusBarHidden: Bool { false }
   override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
@@ -56,7 +57,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       window._fbq = function(){};
       window.gtag = function(){};
       var css = document.createElement('style');
-      css.textContent = 'html,body{background:#050B18!important} html.air-native-app footer{display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important}';
+      css.textContent = 'html,body{background:#050B18!important} html.air-native-app footer:not(.air-bottom){display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important} html.air-native-app .air-mobile-home-hero{display:flex!important} html.air-native-app .air-desktop-home-hero{display:none!important}';
       document.documentElement.appendChild(css);
     })();
     """
@@ -153,21 +154,23 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     logo.translatesAutoresizingMaskIntoConstraints = false
     logo.contentMode = .scaleAspectFit
 
-    bootSpinner.translatesAutoresizingMaskIntoConstraints = false
-    bootSpinner.color = UIColor(red: 24 / 255, green: 119 / 255, blue: 242 / 255, alpha: 1)
-    bootSpinner.startAnimating()
+    bootRing.translatesAutoresizingMaskIntoConstraints = false
+    bootRing.start()
 
-    let stack = UIStackView(arrangedSubviews: [logo, bootSpinner])
+    let stack = UIStackView(arrangedSubviews: [logo, bootRing])
     stack.translatesAutoresizingMaskIntoConstraints = false
     stack.axis = .vertical
     stack.alignment = .center
-    stack.spacing = 28
+    stack.spacing = 32
     bootOverlay.addSubview(stack)
     view.addSubview(bootOverlay)
+    bootShownAt = Date()
 
     NSLayoutConstraint.activate([
       logo.widthAnchor.constraint(equalToConstant: 168),
       logo.heightAnchor.constraint(equalToConstant: 56),
+      bootRing.widthAnchor.constraint(equalToConstant: 28),
+      bootRing.heightAnchor.constraint(equalToConstant: 28),
       stack.centerXAnchor.constraint(equalTo: bootOverlay.centerXAnchor),
       stack.centerYAnchor.constraint(equalTo: bootOverlay.centerYAnchor)
     ])
@@ -175,21 +178,26 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
 
   private func showBootOverlay() {
     didHideBoot = false
+    bootShownAt = Date()
     bootOverlay.alpha = 1
     if bootOverlay.superview == nil {
       view.addSubview(bootOverlay)
     }
-    bootSpinner.startAnimating()
+    bootRing.start()
   }
 
   private func hideBootOverlay() {
     guard !didHideBoot else { return }
-    didHideBoot = true
-    UIView.animate(withDuration: 0.35, delay: 0.05, options: [.curveEaseOut, .allowUserInteraction]) {
-      self.bootOverlay.alpha = 0
-    } completion: { _ in
-      self.bootOverlay.removeFromSuperview()
-      self.bootSpinner.stopAnimating()
+    let remain = max(0, 1.0 - Date().timeIntervalSince(bootShownAt))
+    DispatchQueue.main.asyncAfter(deadline: .now() + remain) { [weak self] in
+      guard let self, !self.didHideBoot else { return }
+      self.didHideBoot = true
+      UIView.animate(withDuration: 0.4, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+        self.bootOverlay.alpha = 0
+      } completion: { _ in
+        self.bootOverlay.removeFromSuperview()
+        self.bootRing.stop()
+      }
     }
   }
 
@@ -398,5 +406,54 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       return
     }
     UIApplication.shared.open(url)
+  }
+}
+
+private final class BootRingView: UIView {
+  private let track = CAShapeLayer()
+  private let ring = CAShapeLayer()
+
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    isUserInteractionEnabled = false
+    track.fillColor = UIColor.clear.cgColor
+    track.strokeColor = UIColor.white.withAlphaComponent(0.14).cgColor
+    track.lineWidth = 2.4
+    ring.fillColor = UIColor.clear.cgColor
+    ring.strokeColor = UIColor(red: 24 / 255, green: 119 / 255, blue: 242 / 255, alpha: 1).cgColor
+    ring.lineWidth = 2.4
+    ring.lineCap = .round
+    ring.strokeStart = 0
+    ring.strokeEnd = 0.78
+    layer.addSublayer(track)
+    layer.addSublayer(ring)
+  }
+
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    let inset = ring.lineWidth / 2
+    let path = UIBezierPath(ovalIn: bounds.insetBy(dx: inset, dy: inset)).cgPath
+    track.frame = bounds
+    ring.frame = bounds
+    track.path = path
+    ring.path = path
+  }
+
+  func start() {
+    layer.removeAnimation(forKey: "spin")
+    let spin = CABasicAnimation(keyPath: "transform.rotation.z")
+    spin.fromValue = 0
+    spin.toValue = CGFloat.pi * 2
+    spin.duration = 0.85
+    spin.repeatCount = .infinity
+    layer.add(spin, forKey: "spin")
+  }
+
+  func stop() {
+    layer.removeAnimation(forKey: "spin")
   }
 }
