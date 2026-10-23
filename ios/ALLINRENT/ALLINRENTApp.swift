@@ -57,7 +57,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       window._fbq = function(){};
       window.gtag = function(){};
       var css = document.createElement('style');
-      css.textContent = 'html,body{background:#050B18!important} html.air-native-app footer:not(.air-bottom){display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important} html.air-native-app .air-mobile-home-hero{display:flex!important} html.air-native-app .air-desktop-home-hero{display:none!important}';
+      css.textContent = 'html,body{background:#050B18!important} html.air-native-app #air-boot-splash{display:none!important} html.air-native-app footer:not(.air-bottom){display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important} html.air-native-app .air-mobile-home-hero{display:flex!important} html.air-native-app .air-desktop-home-hero{display:none!important}';
       document.documentElement.appendChild(css);
     })();
     """
@@ -153,6 +153,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     let logo = UIImageView(image: UIImage(named: "BootLogo") ?? UIImage(named: "LaunchLogo"))
     logo.translatesAutoresizingMaskIntoConstraints = false
     logo.contentMode = .scaleAspectFit
+    logo.clipsToBounds = true
+    logo.setContentHuggingPriority(.required, for: .horizontal)
+    logo.setContentHuggingPriority(.required, for: .vertical)
 
     bootRing.translatesAutoresizingMaskIntoConstraints = false
     bootRing.start()
