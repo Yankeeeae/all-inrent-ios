@@ -29,8 +29,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   private let locationManager = CLLocationManager()
   private var webView: WKWebView!
   private var pendingGeoDecision: ((WKPermissionDecision) -> Void)?
-  private let fadeCover = UIView()
-  private var didFadeCover = false
+  private let bootOverlay = UIView()
+  private let bootSpinner = UIActivityIndicatorView(style: .large)
+  private var didHideBoot = false
 
   override var prefersStatusBarHidden: Bool { false }
   override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
@@ -78,17 +79,8 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     webView.navigationDelegate = self
     webView.uiDelegate = self
     view.addSubview(webView)
-
-    fadeCover.backgroundColor = screenColor
-    fadeCover.frame = view.bounds
-    fadeCover.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    fadeCover.isUserInteractionEnabled = false
-    view.addSubview(fadeCover)
-
+    installBootOverlay()
     installAdBlockerThenLoad()
-    DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) { [weak self] in
-      self?.fadeOutCover()
-    }
   }
 
   private func installAdBlockerThenLoad() {
@@ -127,9 +119,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
     webView.frame = view.bounds
-    if fadeCover.superview != nil {
-      fadeCover.frame = view.bounds
-    }
+    bootOverlay.frame = view.bounds
     webView.scrollView.contentInset = .zero
     webView.scrollView.scrollIndicatorInsets = .zero
     pushSafeAreaInsets()
@@ -137,24 +127,75 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
 
   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
     pushSafeAreaInsets()
-    fadeOutCover()
+    hideBootOverlay()
   }
 
   func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-    fadeOutCover()
+    hideBootOverlay()
   }
 
   func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-    fadeOutCover()
+    hideBootOverlay()
   }
 
-  private func fadeOutCover() {
-    guard !didFadeCover else { return }
-    didFadeCover = true
-    UIView.animate(withDuration: 0.5, delay: 0.04, options: [.curveEaseOut, .allowUserInteraction]) {
-      self.fadeCover.alpha = 0
+  func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+    showBootOverlay()
+    webView.reload()
+  }
+
+  private func installBootOverlay() {
+    bootOverlay.backgroundColor = screenColor
+    bootOverlay.frame = view.bounds
+    bootOverlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    bootOverlay.isUserInteractionEnabled = false
+
+    let logo = UIImageView(image: UIImage(named: "LaunchLogo"))
+    logo.translatesAutoresizingMaskIntoConstraints = false
+    logo.contentMode = .scaleAspectFit
+
+    bootSpinner.translatesAutoresizingMaskIntoConstraints = false
+    bootSpinner.color = .white
+    bootSpinner.startAnimating()
+
+    let label = UILabel()
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.text = "Chargement…"
+    label.textColor = .white
+    label.font = .systemFont(ofSize: 15, weight: .semibold)
+
+    let stack = UIStackView(arrangedSubviews: [logo, bootSpinner, label])
+    stack.translatesAutoresizingMaskIntoConstraints = false
+    stack.axis = .vertical
+    stack.alignment = .center
+    stack.spacing = 16
+    bootOverlay.addSubview(stack)
+    view.addSubview(bootOverlay)
+
+    NSLayoutConstraint.activate([
+      logo.widthAnchor.constraint(equalToConstant: 96),
+      logo.heightAnchor.constraint(equalToConstant: 96),
+      stack.centerXAnchor.constraint(equalTo: bootOverlay.centerXAnchor),
+      stack.centerYAnchor.constraint(equalTo: bootOverlay.centerYAnchor)
+    ])
+  }
+
+  private func showBootOverlay() {
+    didHideBoot = false
+    bootOverlay.alpha = 1
+    if bootOverlay.superview == nil {
+      view.addSubview(bootOverlay)
+    }
+    bootSpinner.startAnimating()
+  }
+
+  private func hideBootOverlay() {
+    guard !didHideBoot else { return }
+    didHideBoot = true
+    UIView.animate(withDuration: 0.35, delay: 0.05, options: [.curveEaseOut, .allowUserInteraction]) {
+      self.bootOverlay.alpha = 0
     } completion: { _ in
-      self.fadeCover.removeFromSuperview()
+      self.bootOverlay.removeFromSuperview()
+      self.bootSpinner.stopAnimating()
     }
   }
 

@@ -1,1 +1,1 @@
-In-app booking request: name, phone, email, on-screen confirmation. WhatsApp is no longer required. Search, listings, favorites. No advertising tracking.
+Loading screen on every launch. Updated mobile home. Search, listings and favorites. No advertising tracking.

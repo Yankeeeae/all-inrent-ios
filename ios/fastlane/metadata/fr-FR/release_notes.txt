@@ -1,1 +1,1 @@
-Demande de réservation dans l’app : prénom, téléphone, e-mail, confirmation à l’écran. WhatsApp n’est plus obligatoire. Recherche, fiches, favoris. Pas de tracking publicitaire.
+Écran de chargement à chaque ouverture. Accueil mobile mis à jour. Recherche, fiches et favoris. Pas de tracking publicitaire.
