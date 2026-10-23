@@ -48,7 +48,7 @@ for (const size of sizes) {
 
   for (const shot of shots) {
     await page.goto(shot.url, { waitUntil: "domcontentloaded", timeout: 90000 });
-    await page.waitForTimeout(2800);
+    await page.waitForTimeout(shot.file.includes("accueil") ? 4500 : 2800);
     if (shot.file.includes("fiche")) {
       const card = page.locator('a[href*="/vehicules/"]').first();
       if (await card.count()) {

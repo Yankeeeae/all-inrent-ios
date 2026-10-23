@@ -1,4 +1,4 @@
-ALL IN RENT 1.0.6 — App Review notes (Guidelines 4.2 and 5.1.2)
+ALL IN RENT 1.0.11 — App Review notes (Guidelines 4.2 and 5.1.2)
 
 NO ACCOUNT IN THIS APP
 Consumer catalog only. Search, listing details, favorites and in-app contact work with no registration. There is no Sign Up / Sign In. Favorites are stored locally. Please do not look for a new-account form.

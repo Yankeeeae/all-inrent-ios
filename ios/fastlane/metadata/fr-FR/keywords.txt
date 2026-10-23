@@ -1,1 +1,1 @@
-location,voiture,luxe,moto,yacht,chauffeur,VTC,premium,Paris,rent
+moto,chauffeur,VTC,supercar,mariage,Ferrari,Lamborghini,Paris,Cannes,Nice,Lyon,SUV,cabriolet
