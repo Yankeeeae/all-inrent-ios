@@ -1,12 +1,16 @@
 import SwiftUI
 import WebKit
 import CoreLocation
+import UserNotifications
 
 private let startURL = URL(string: "https://www.all-inrent.com/fr")!
 private let screenColor = UIColor(red: 5 / 255, green: 11 / 255, blue: 24 / 255, alpha: 1)
+private let airOpenPushURL = Notification.Name("airOpenPushURL")
 
 @main
 struct ALLINRENTApp: App {
+  @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
   var body: some Scene {
     WindowGroup {
       WebContainerView()
@@ -14,6 +18,90 @@ struct ALLINRENTApp: App {
         .preferredColorScheme(.dark)
         .background(Color(red: 5 / 255, green: 11 / 255, blue: 24 / 255))
     }
+  }
+}
+
+final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+  func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+  ) -> Bool {
+    UNUserNotificationCenter.current().delegate = self
+    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+      self.requestPush()
+    }
+    if let payload = launchOptions?[.remoteNotification] as? [AnyHashable: Any],
+       let url = Self.url(from: payload) {
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+        NotificationCenter.default.post(name: airOpenPushURL, object: url)
+      }
+    }
+    return true
+  }
+
+  func requestPush() {
+    UNUserNotificationCenter.current().getNotificationSettings { settings in
+      switch settings.authorizationStatus {
+      case .notDetermined:
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+          guard granted else { return }
+          DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
+        }
+      case .authorized, .provisional:
+        DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
+      default:
+        break
+      }
+    }
+  }
+
+  func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    let token = deviceToken.map { String(format: "%02x", $0) }.joined()
+    UserDefaults.standard.set(token, forKey: "air.pushToken")
+    Self.registerToken(token)
+  }
+
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    completionHandler([.banner, .sound])
+  }
+
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    if let url = Self.url(from: response.notification.request.content.userInfo) {
+      NotificationCenter.default.post(name: airOpenPushURL, object: url)
+    }
+    completionHandler()
+  }
+
+  static func url(from userInfo: [AnyHashable: Any]) -> URL? {
+    if let raw = userInfo["url"] as? String { return URL(string: raw) }
+    return nil
+  }
+
+  static func registerToken(_ token: String) {
+    var body: [String: Any] = [
+      "platform": "ios",
+      "role": "traveler",
+      "token": token,
+      "locale": Locale.current.languageCode ?? "fr",
+    ]
+    if let city = UserDefaults.standard.string(forKey: "air.pushCity"), !city.isEmpty {
+      body["city"] = city
+    }
+    guard let data = try? JSONSerialization.data(withJSONObject: body),
+          let url = URL(string: "https://www.all-inrent.com/api/push/register") else { return }
+    var req = URLRequest(url: url)
+    req.httpMethod = "POST"
+    req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    req.httpBody = data
+    URLSession.shared.dataTask(with: req).resume()
   }
 }
 
@@ -82,6 +170,21 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     view.addSubview(webView)
     installBootOverlay()
     installAdBlockerThenLoad()
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(openPushURL(_:)),
+      name: airOpenPushURL,
+      object: nil
+    )
+  }
+
+  deinit {
+    NotificationCenter.default.removeObserver(self)
+  }
+
+  @objc private func openPushURL(_ note: Notification) {
+    guard let url = note.object as? URL, isAllowedWebHost(url), !isConsumerBlockedPath(url) else { return }
+    webView.load(URLRequest(url: url))
   }
 
   private func installAdBlockerThenLoad() {
@@ -348,8 +451,16 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   }
 
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-    guard let coordinate = locations.last?.coordinate else { return }
-    injectGeo(coordinate)
+    guard let location = locations.last else { return }
+    injectGeo(location.coordinate)
+    CLGeocoder().reverseGeocodeLocation(location) { marks, _ in
+      let city = marks?.first?.locality?.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard let city, !city.isEmpty else { return }
+      UserDefaults.standard.set(city, forKey: "air.pushCity")
+      if let token = UserDefaults.standard.string(forKey: "air.pushToken") {
+        AppDelegate.registerToken(token)
+      }
+    }
   }
 
   func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}

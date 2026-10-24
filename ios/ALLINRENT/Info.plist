@@ -47,6 +47,10 @@
   <string>UIStatusBarStyleLightContent</string>
   <key>UIViewControllerBasedStatusBarAppearance</key>
   <true/>
+  <key>UIBackgroundModes</key>
+  <array>
+    <string>remote-notification</string>
+  </array>
   <key>NSLocationWhenInUseUsageDescription</key>
   <string>ALL IN RENT utilise votre position pour trouver des véhicules près de vous.</string>
   <key>LSApplicationQueriesSchemes</key>

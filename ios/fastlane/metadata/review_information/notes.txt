@@ -1,4 +1,7 @@
-ALL IN RENT 1.0.11 — App Review notes (Guidelines 4.2 and 5.1.2)
+ALL IN RENT 1.0.12 — App Review notes (Guidelines 4.2 and 5.1.2)
+
+OPTIONAL PUSH
+The app may ask for notifications after launch to alert travelers when a new vehicle is listed in their city. Decline is fine; catalog and in-app contact still work. No advertising / no tracking.
 
 NO ACCOUNT IN THIS APP
 Consumer catalog only. Search, listing details, favorites and in-app contact work with no registration. There is no Sign Up / Sign In. Favorites are stored locally. Please do not look for a new-account form.
