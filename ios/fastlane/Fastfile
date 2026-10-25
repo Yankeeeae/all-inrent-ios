@@ -100,6 +100,9 @@ platform :ios do
     shots = Dir.glob(File.expand_path("fastlane/screenshots/**/*.png"))
     UI.message("App Store screenshots: #{shots.length}")
 
+    UI.message("Publication des versions Apple déjà approuvées, si besoin")
+    sh("node #{File.expand_path('release-pending.mjs', __dir__)}")
+
     upload_to_app_store(
       api_key: api_key,
       app_identifier: APP_ID,
