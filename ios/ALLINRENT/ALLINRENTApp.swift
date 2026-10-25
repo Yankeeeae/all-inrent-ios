@@ -27,9 +27,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     UNUserNotificationCenter.current().delegate = self
-    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-      self.requestPush()
-    }
+    self.requestPush()
     if let payload = launchOptions?[.remoteNotification] as? [AnyHashable: Any],
        let url = Self.url(from: payload) {
       DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
@@ -37,6 +35,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
       }
     }
     return true
+  }
+
+  func applicationDidBecomeActive(_ application: UIApplication) {
+    requestPush()
   }
 
   func requestPush() {
@@ -47,7 +49,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
           guard granted else { return }
           DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
         }
-      case .authorized, .provisional:
+      case .authorized, .provisional, .ephemeral:
         DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
       default:
         break
