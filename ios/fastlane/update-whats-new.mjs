@@ -93,7 +93,16 @@ if (!versions.ok || !versions.json.data?.length) {
 }
 
 const version = versions.json.data[0];
-console.log(`Version ${version.attributes?.versionString} state=${version.attributes?.appStoreState} id=${version.id}`);
+const state = version.attributes?.appStoreState;
+console.log(`Version ${version.attributes?.versionString} state=${state} id=${version.id}`);
+if (
+  state === "PENDING_DEVELOPER_RELEASE" ||
+  state === "READY_FOR_SALE" ||
+  state === "PROCESSING_FOR_APP_STORE"
+) {
+  console.log("Copy figée dans cet état — skip What's New / description");
+  process.exit(0);
+}
 
 const locs = await api("GET", `appStoreVersions/${version.id}/appStoreVersionLocalizations`);
 if (!locs.ok) process.exit(1);
