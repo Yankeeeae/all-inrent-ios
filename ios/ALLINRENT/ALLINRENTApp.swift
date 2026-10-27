@@ -142,12 +142,11 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     let bootJS = """
     (function(){
       document.documentElement.classList.add('air-native-app');
-      document.documentElement.style.backgroundColor = '#050B18';
       window.fbq = function(){};
       window._fbq = function(){};
       window.gtag = function(){};
       var css = document.createElement('style');
-      css.textContent = 'html,body{background:#050B18!important} html.air-native-app #air-boot-splash{display:none!important} html.air-native-app footer:not(.air-bottom){display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important} html.air-native-app .air-mobile-home-hero{display:flex!important} html.air-native-app .air-desktop-home-hero{display:none!important}';
+      css.textContent = 'html.air-native-app,html.air-native-app body{background:#fff!important} html.air-native-app #air-boot-splash{display:none!important} html.air-native-app footer:not(.air-bottom){display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important} html.air-native-app .air-mobile-home-hero{display:flex!important} html.air-native-app .air-desktop-home-hero{display:none!important} html.air-native-app .site-main-pad,html.air-native-app .site-main-pad-desktop{padding-bottom:var(--app-safe-bottom,env(safe-area-inset-bottom,0px))!important}';
       document.documentElement.appendChild(css);
     })();
     """
@@ -157,9 +156,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
 
     webView = WKWebView(frame: view.bounds, configuration: config)
     webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    webView.backgroundColor = screenColor
+    webView.backgroundColor = .white
     webView.isOpaque = true
-    webView.scrollView.backgroundColor = screenColor
+    webView.scrollView.backgroundColor = .white
     webView.scrollView.contentInsetAdjustmentBehavior = .never
     webView.scrollView.contentInset = .zero
     webView.scrollView.verticalScrollIndicatorInsets = .zero

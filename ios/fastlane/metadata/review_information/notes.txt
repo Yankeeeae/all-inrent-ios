@@ -10,7 +10,7 @@ GUIDELINE 4.2 — IN-APP CONTACT (WhatsApp is not required)
 Contact is fully in-app. On any listing:
 1. Launch ALL IN RENT.
 2. If welcome slides appear, tap Skip (top right).
-3. Home: browse vehicles (cars, motorcycles, yachts, chauffeur).
+3. Home: browse vehicles (cars, motorcycles, yachts, chauffeur). Headline: “Si le bonheur ne s’achète pas, louez-le.”
 4. Open any listing (photos, price, agency).
 5. Tap “Contacter” / “Envoyer une demande” (blue button at the bottom).
 6. Fill first name, phone and email, then tap “Envoyer ma demande”.
@@ -30,7 +30,9 @@ We do not use App Tracking Transparency because the iOS app does not track.
 Please update / confirm App Privacy: “Does this app track users?” = No. Do not mark Name, Email, Phone, Device ID, Advertising Data, Physical Address or Product Interaction as used for Tracking.
 
 DO NOT USE WEBSITE AGENCY TOOLS
-Publier, /agency, /admin are website-only B2B tools, blocked in this binary. Sign-In Required is OFF. Camera and photo library are not used.
+These website-only B2B paths are blocked in this binary (redirect home):
+/publier, /agency, /admin (including /admin/content-studio), /reseaux-sociaux, /abonnement, /agences (directory; agency profile pages remain).
+Sign-In Required is OFF. Camera and photo library are not used.
 
 LOCATION
 If iOS asks for Location, Allow Once to rank nearby vehicles. Optional.
@@ -39,6 +41,7 @@ EXTERNAL SERVICES
 - https://www.all-inrent.com (catalog in WKWebView, domain-locked)
 - Supabase: vehicle/agency database and photos
 - First-party lead API for in-app requests
+- First-party push register API for optional APNs
 - Phone / Mail: optional system apps
 - Stripe exists on the website for B2B agency subscriptions only — no IAP in this app
 

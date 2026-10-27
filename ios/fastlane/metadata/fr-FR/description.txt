@@ -1,11 +1,12 @@
 ALL IN RENT — la plateforme de location premium.
 
-Découvrez des véhicules de luxe, motos, yachts et services chauffeur près de chez vous : Paris, Lyon, Marseille, Bruxelles, Genève et plus encore. Aucun compte n’est demandé.
+Découvrez des véhicules de luxe, motos, yachts et services chauffeur près de chez vous : Paris, Cannes, Nice, Lyon, Marseille et plus encore. Aucun compte n’est demandé.
 
 FONCTIONNALITÉS
 • Recherche par ville, catégorie et budget
 • Fiches détaillées avec photos, prix et agence
 • Demande de réservation directement dans l’app (l’agence vous rappelle)
+• Notifications optionnelles pour les nouveaux véhicules près de vous
 • Appel optionnel vers l’agence
 • Géolocalisation pour trouver les offres à proximité
 • Favoris enregistrés sur l’appareil

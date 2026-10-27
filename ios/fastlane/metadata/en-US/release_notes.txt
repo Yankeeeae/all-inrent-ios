@@ -1,1 +1,7 @@
-Push alerts for new nearby vehicles. 4K home, search and iPhone navigation.
+What's New
+
+• Notifications: get an alert when a new vehicle is listed near you. You can decline — the catalog still works.
+• Home: “If happiness can’t be bought, rent it.”
+• No empty bar at the bottom of the screen.
+• Smoother search, listing photos and iPhone navigation.
+• Booking requests stay in the app — the agency calls you back. No account needed.
