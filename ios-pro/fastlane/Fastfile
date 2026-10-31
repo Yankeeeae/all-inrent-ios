@@ -15,22 +15,14 @@ def connect_api_key
 end
 
 platform :ios do
-  desc "Crée l’app App Store Connect + identifiant com.allinrent.pro si besoin"
+  desc "Create App Store Connect app and Developer App ID for com.allinrent.pro"
   lane :bootstrap do
-    api_key = connect_api_key
-    produce(
-      app_identifier: APP_ID,
-      app_name: "ALL IN RENT PRO",
-      sku: "allinrent-pro",
-      language: "French",
-      platform: "ios",
-      skip_itc: false,
-      skip_devcenter: false
-    )
-    UI.success("App #{APP_ID} prête sur App Store Connect")
+    connect_api_key
+    sh("node #{File.expand_path('bootstrap-app.mjs', __dir__)}")
+    UI.success("App #{APP_ID} ready on App Store Connect")
   end
 
-  desc "Compile et envoie le build sur App Store Connect / TestFlight, puis soumet à la review"
+  desc "Build, upload TestFlight, then submit for App Review"
   lane :release do
     setup_ci
     api_key = connect_api_key
@@ -100,7 +92,7 @@ platform :ios do
     end
   end
 
-  desc "Envoie la fiche App Store et soumet le dernier build à la review"
+  desc "Upload App Store listing and submit the latest build"
   lane :submit_review do
     api_key = connect_api_key
     rating_path = [
@@ -146,7 +138,7 @@ platform :ios do
     )
   end
 
-  desc "Affiche l'état App Store Connect"
+  desc "Print App Store Connect status"
   lane :status do
     api_key = connect_api_key
     require "spaceship"

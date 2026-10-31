@@ -60,7 +60,6 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios-pro/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
         run: fastlane bootstrap
-        continue-on-error: true
 
       - name: Install XcodeGen
         if: ${{ inputs.skip_binary != true }}
