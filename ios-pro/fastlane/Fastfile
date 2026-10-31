@@ -103,7 +103,7 @@ platform :ios do
     ].find { |path| File.exist?(path) }
     UI.user_error!("rating.json introuvable") unless rating_path
     UI.message("Age rating file: #{rating_path}")
-    shots = Dir.glob(File.expand_path("fastlane/screenshots/**/*.png"))
+    shots = Dir.glob(File.expand_path("screenshots/**/*.png", __dir__))
     UI.message("App Store screenshots: #{shots.length}")
 
     UI.message("Publication des versions Apple déjà approuvées, si besoin")
