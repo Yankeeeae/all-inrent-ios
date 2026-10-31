@@ -6,5 +6,15 @@ ios/fastlane/node_modules/
 ios/fastlane/package.json
 ios/fastlane/package-lock.json
 ios/fastlane/screenshots/
+ios-pro/private_keys/
+ios-pro/build/
+ios-pro/fastlane/node_modules/
+ios-pro/fastlane/package.json
+ios-pro/fastlane/package-lock.json
+ios-pro/fastlane/screenshots/
+ios-pro/*.p12
+ios-pro/dist.cer
+ios-pro/dist.key
+ios-pro/dist.pem
 .DS_Store
 

@@ -1,0 +1,14 @@
+ALL IN RENT PRO is the workspace for ALL IN RENT partner rental agencies.
+
+Manage your fleet, answer traveler requests and issue digital rental contracts from iPhone.
+
+• Agency dashboard
+• Fleet: add, publish, drafts
+• Inbound client requests from your listings
+• Digital rental contracts: photos, signatures, PDF
+• Quotes, invoices and documents (plan-dependent)
+• Alerts when a new request arrives
+
+Sign-in is for ALL IN RENT agencies only. Account provided by ALL IN RENT.
+
+https://www.all-inrent.com/agency/login

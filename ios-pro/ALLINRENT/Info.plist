@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>fr</string>
+  <key>CFBundleDisplayName</key>
+  <string>ALL IN RENT PRO</string>
+  <key>CFBundleExecutable</key>
+  <string>$(EXECUTABLE_NAME)</string>
+  <key>CFBundleIdentifier</key>
+  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>ALL IN RENT PRO</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$(MARKETING_VERSION)</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>LSRequiresIPhoneOS</key>
+  <true/>
+  <key>UILaunchScreen</key>
+  <dict>
+    <key>UIColorName</key>
+    <string>LaunchBackground</string>
+  </dict>
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+  </array>
+  <key>UIRequiresFullScreen</key>
+  <true/>
+  <key>UIStatusBarStyle</key>
+  <string>UIStatusBarStyleLightContent</string>
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <true/>
+  <key>UIBackgroundModes</key>
+  <array>
+    <string>remote-notification</string>
+  </array>
+  <key>NSCameraUsageDescription</key>
+  <string>ALL IN RENT PRO utilise la caméra pour photographier le véhicule, le permis et la pièce d’identité lors d’un contrat de location.</string>
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>ALL IN RENT PRO accède à vos photos pour joindre des pièces et l’état des lieux au contrat.</string>
+  <key>NSPhotoLibraryAddUsageDescription</key>
+  <string>ALL IN RENT PRO peut enregistrer le PDF du contrat dans vos photos.</string>
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>ALL IN RENT PRO peut utiliser la position pour préremplir la ville de l’agence. Vous pouvez refuser.</string>
+  <key>LSApplicationQueriesSchemes</key>
+  <array>
+    <string>whatsapp</string>
+    <string>tel</string>
+    <string>mailto</string>
+  </array>
+  <key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
+</dict>
+</plist>

@@ -1,0 +1,5 @@
+app_identifier("com.allinrent.pro")
+platform("ios")
+overwrite_screenshots(true)
+ignore_language_directory_validation(true)
+precheck_include_in_app_purchases(false)

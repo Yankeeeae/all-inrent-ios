@@ -1,0 +1,35 @@
+ALL IN RENT PRO 1.0.0 — App Review notes
+
+THIS APP IS FOR RENTAL AGENCIES (B2B), NOT TRAVELERS.
+The consumer catalog app is a separate listing: ALL IN RENT (com.allinrent.app).
+This binary opens only the agency workspace at https://www.all-inrent.com/agency/
+
+SIGN-IN REQUIRED
+Use the demo account in App Store Connect (Username / Password fields).
+After login you should see Accueil (dashboard), Flotte, Demandes, Contrats.
+
+WALKTHROUGH
+1. Launch ALL IN RENT PRO.
+2. Sign in with the provided demo account.
+3. Accueil: agency actions and stats.
+4. Flotte: vehicle list.
+5. Contrats: archived rental contracts; tap Voir le contrat; Nouveau to start a digital contract (photos + signatures).
+6. Demandes: inbound traveler requests.
+
+GUIDELINE 4.2
+This is not a website wrapper of the public catalog. It is a restricted agency tool (login, fleet CMS, contracts with camera, PDF). Traveler pages open in Safari.
+
+CAMERA / PHOTOS
+Used only for rental-contract ID, license and vehicle condition photos. Decline is possible; other screens still work.
+
+PUSH
+Optional alerts when a traveler sends a request. Decline is fine.
+
+NO TRACKING
+No IDFA. Meta Pixel / Google ads scripts are blocked in the WebView (User-Agent AllInRentPRO/1.0).
+
+NO IAP
+Agency subscriptions are billed on the website via Stripe for businesses, not as iOS IAP.
+
+Privacy: https://www.all-inrent.com/fr/confidentialite
+Support: allinrent.off@gmail.com
