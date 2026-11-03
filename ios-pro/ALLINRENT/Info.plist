@@ -19,7 +19,7 @@
   <key>CFBundleShortVersionString</key>
   <string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key>
-  <string>1</string>
+  <string>2</string>
   <key>LSRequiresIPhoneOS</key>
   <true/>
   <key>UILaunchScreen</key>
@@ -50,6 +50,19 @@
   <string>ALL IN RENT PRO peut enregistrer le PDF du contrat dans vos photos.</string>
   <key>NSLocationWhenInUseUsageDescription</key>
   <string>ALL IN RENT PRO peut utiliser la position pour préremplir la ville de l’agence. Vous pouvez refuser.</string>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>CFBundleURLName</key>
+      <string>com.allinrent.pro</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>allinrentpro</string>
+      </array>
+    </dict>
+  </array>
   <key>LSApplicationQueriesSchemes</key>
   <array>
     <string>whatsapp</string>

@@ -2,10 +2,12 @@ import SwiftUI
 import WebKit
 import CoreLocation
 import UserNotifications
+import SafariServices
 
 private let startURL = URL(string: "https://www.all-inrent.com/fr")!
 private let screenColor = UIColor(red: 5 / 255, green: 11 / 255, blue: 24 / 255, alpha: 1)
 private let airOpenPushURL = Notification.Name("airOpenPushURL")
+private let airOpenSafariURL = Notification.Name("airOpenSafariURL")
 
 @main
 struct ALLINRENTApp: App {
@@ -17,6 +19,14 @@ struct ALLINRENTApp: App {
         .ignoresSafeArea(.all)
         .preferredColorScheme(.dark)
         .background(Color(red: 5 / 255, green: 11 / 255, blue: 24 / 255))
+        .onOpenURL { url in
+          NotificationCenter.default.post(name: airOpenPushURL, object: url)
+        }
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+          if let url = activity.webpageURL {
+            NotificationCenter.default.post(name: airOpenPushURL, object: url)
+          }
+        }
     }
   }
 }
@@ -103,7 +113,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     req.httpMethod = "POST"
     req.setValue("application/json", forHTTPHeaderField: "Content-Type")
     req.httpBody = data
-    URLSession.shared.dataTask(with: req).resume()
+    func send(attempt: Int) {
+      URLSession.shared.dataTask(with: req) { _, response, _ in
+        let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if (code == 0 || code >= 400), attempt < 3 {
+          DispatchQueue.main.asyncAfter(deadline: .now() + Double(attempt) * 1.5) {
+            send(attempt: attempt + 1)
+          }
+        }
+      }.resume()
+    }
+    send(attempt: 1)
   }
 }
 
@@ -177,6 +197,12 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       name: airOpenPushURL,
       object: nil
     )
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(openSafariURL(_:)),
+      name: airOpenSafariURL,
+      object: nil
+    )
   }
 
   deinit {
@@ -184,8 +210,20 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   }
 
   @objc private func openPushURL(_ note: Notification) {
-    guard let url = note.object as? URL, isAllowedWebHost(url), !isConsumerBlockedPath(url) else { return }
+    guard let url = note.object as? URL else { return }
+    if isAgencyHandoffURL(url) {
+      handOffAgencyLink(url)
+      return
+    }
+    guard isAllowedWebHost(url), !isConsumerBlockedPath(url) else { return }
     webView.load(URLRequest(url: url))
+  }
+
+  @objc private func openSafariURL(_ note: Notification) {
+    guard let url = note.object as? URL else { return }
+    let safari = SFSafariViewController(url: url)
+    safari.dismissButtonStyle = .close
+    present(safari, animated: true)
   }
 
   private func installAdBlockerThenLoad() {
@@ -368,6 +406,11 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         return
       }
       if isAllowedWebHost(url) {
+        if isAgencyHandoffURL(url) {
+          handOffAgencyLink(url)
+          decisionHandler(.cancel)
+          return
+        }
         if isConsumerBlockedPath(url) {
           webView.load(URLRequest(url: startURL))
           decisionHandler(.cancel)
@@ -404,6 +447,8 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         openExternally(url)
       } else if isTikTokHost(url) {
         return nil
+      } else if isAllowedWebHost(url), isAgencyHandoffURL(url) {
+        handOffAgencyLink(url)
       } else if isAllowedWebHost(url), isConsumerBlockedPath(url) {
         webView.load(URLRequest(url: startURL))
       } else if !isAllowedWebHost(url) {
@@ -494,8 +539,27 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   private func isConsumerBlockedPath(_ url: URL) -> Bool {
     let rest = pathWithoutLocale(url.path)
     if rest == "/agences" { return true }
-    let blocked = ["/publier", "/agency", "/admin", "/reseaux-sociaux"]
+    let blocked = ["/publier", "/agency", "/admin", "/reseaux-sociaux", "/open"]
     return blocked.contains { rest == $0 || rest.hasPrefix("\($0)/") }
+  }
+
+  private func isAgencyHandoffURL(_ url: URL) -> Bool {
+    guard isAllowedWebHost(url) else { return false }
+    let rest = pathWithoutLocale(url.path)
+    let prefixes = ["/agency", "/open"]
+    return prefixes.contains { rest == $0 || rest.hasPrefix("\($0)/") }
+  }
+
+  private func handOffAgencyLink(_ url: URL) {
+    var comps = URLComponents()
+    comps.scheme = "allinrentpro"
+    comps.host = "open"
+    comps.queryItems = [URLQueryItem(name: "u", value: url.absoluteString)]
+    if let pro = comps.url, UIApplication.shared.canOpenURL(pro) {
+      UIApplication.shared.open(pro)
+      return
+    }
+    NotificationCenter.default.post(name: airOpenSafariURL, object: url)
   }
 
   private func shouldOpenExternally(_ url: URL) -> Bool {

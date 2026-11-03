@@ -6,6 +6,9 @@ import UserNotifications
 private let startURL = URL(string: "https://www.all-inrent.com/agency/login")!
 private let screenColor = UIColor(red: 5 / 255, green: 11 / 255, blue: 24 / 255, alpha: 1)
 private let airOpenPushURL = Notification.Name("airOpenPushURL")
+private enum AirPendingURL {
+  static var value: URL?
+}
 
 @main
 struct ALLINRENTApp: App {
@@ -17,6 +20,16 @@ struct ALLINRENTApp: App {
         .ignoresSafeArea(.all)
         .preferredColorScheme(.dark)
         .background(Color(red: 5 / 255, green: 11 / 255, blue: 24 / 255))
+        .onOpenURL { url in
+          AirPendingURL.value = url
+          NotificationCenter.default.post(name: airOpenPushURL, object: url)
+        }
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+          if let url = activity.webpageURL {
+            AirPendingURL.value = url
+            NotificationCenter.default.post(name: airOpenPushURL, object: url)
+          }
+        }
     }
   }
 }
@@ -187,6 +200,12 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       name: airOpenPushURL,
       object: nil
     )
+    if let pending = AirPendingURL.value {
+      AirPendingURL.value = nil
+      DispatchQueue.main.async { [weak self] in
+        self?.loadResolved(pending)
+      }
+    }
   }
 
   deinit {
@@ -194,8 +213,13 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   }
 
   @objc private func openPushURL(_ note: Notification) {
-    guard let url = note.object as? URL, isAllowedWebHost(url), isAgencyAppPath(url) else { return }
-    webView.load(URLRequest(url: url))
+    guard let url = note.object as? URL else { return }
+    loadResolved(url)
+  }
+
+  private func loadResolved(_ url: URL) {
+    guard let target = resolvedAppURL(url), isAllowedWebHost(target), isAgencyAppPath(target) else { return }
+    webView.load(URLRequest(url: target))
   }
 
   private func installAdBlockerThenLoad() {
@@ -365,6 +389,14 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       return
     }
 
+    if url.scheme?.lowercased() == "allinrentpro" {
+      if let target = resolvedAppURL(url), isAgencyAppPath(target) {
+        webView.load(URLRequest(url: target))
+      }
+      decisionHandler(.cancel)
+      return
+    }
+
     if shouldOpenExternally(url) {
       openExternally(url)
       decisionHandler(.cancel)
@@ -378,12 +410,15 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         return
       }
       if isAllowedWebHost(url) {
-        if !isAgencyAppPath(url) {
-          UIApplication.shared.open(url)
-          decisionHandler(.cancel)
+        if isAgencyAppPath(url) {
+          decisionHandler(.allow)
           return
         }
-        decisionHandler(.allow)
+        // Ne jamais passer all-inrent.com à iOS : les Universal Links ouvrent l’app voyageur.
+        decisionHandler(.cancel)
+        if navigationAction.targetFrame?.isMainFrame ?? true {
+          webView.load(URLRequest(url: startURL))
+        }
         return
       }
       UIApplication.shared.open(url)
@@ -414,8 +449,10 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         openExternally(url)
       } else if isTikTokHost(url) {
         return nil
-      } else if isAllowedWebHost(url), !isAgencyAppPath(url) {
-        UIApplication.shared.open(url)
+      } else if isAllowedWebHost(url), isAgencyAppPath(url) {
+        webView.load(URLRequest(url: url))
+      } else if isAllowedWebHost(url) {
+        webView.load(URLRequest(url: startURL))
       } else if !isAllowedWebHost(url) {
         UIApplication.shared.open(url)
       }
@@ -515,8 +552,37 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     let host = url.host?.lowercased() ?? ""
     if host.contains("stripe.com") { return true }
     let rest = pathWithoutLocale(url.path)
-    let allowed = ["/agency", "/api", "/publier", "/abonnement"]
+    if rest.hasPrefix("/_next") { return true }
+    let allowed = ["/agency", "/api", "/publier", "/abonnement", "/open"]
     return allowed.contains { rest == $0 || rest.hasPrefix("\($0)/") }
+  }
+
+  private func resolvedAppURL(_ url: URL) -> URL? {
+    let scheme = url.scheme?.lowercased() ?? ""
+    if scheme == "allinrentpro" {
+      if let raw = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+        .queryItems?.first(where: { $0.name == "u" })?.value,
+         let web = URL(string: raw) {
+        return web
+      }
+      let host = url.host?.lowercased() ?? ""
+      if host == "open" { return startURL }
+      let path = host.isEmpty ? url.path : "/\(host)\(url.path == "/" ? "" : url.path)"
+      return URL(string: "https://www.all-inrent.com\(path)")
+    }
+    if scheme == "http" || scheme == "https" {
+      let rest = pathWithoutLocale(url.path)
+      if rest == "/open" || rest.hasPrefix("/open/") {
+        if let next = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+          .queryItems?.first(where: { $0.name == "next" })?.value,
+           next.hasPrefix("/agency") {
+          return URL(string: "https://www.all-inrent.com\(next)")
+        }
+        return startURL
+      }
+      return url
+    }
+    return nil
   }
 
   private func shouldOpenExternally(_ url: URL) -> Bool {
