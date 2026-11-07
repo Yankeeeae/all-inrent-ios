@@ -10,10 +10,25 @@ const sizes = [
   { dir: "iphone-6.7", width: 430, height: 932, scale: 3 },
 ];
 
+const promoBySize = {
+  "iphone-6.9": "1320x2868",
+  "iphone-6.7": "1290x2796",
+};
+const promoFiles = ["01_decouverte.png", "02_recherche.png", "03_fiche.png"];
+for (const size of sizes) {
+  for (const locale of locales) {
+    const destDir = path.join(__dirname, "screenshots", locale);
+    fs.mkdirSync(destDir, { recursive: true });
+    for (const file of promoFiles) {
+      const src = path.join(__dirname, "promo", promoBySize[size.dir], file);
+      const dest = path.join(destDir, `${size.dir}_${file}`);
+      fs.copyFileSync(src, dest);
+      console.log(`PROMO ${locale}/${path.basename(dest)}`);
+    }
+  }
+}
+
 const shots = [
-  { file: "01_accueil.png", url: "https://www.all-inrent.com/fr" },
-  { file: "02_vehicules.png", url: "https://www.all-inrent.com/fr/vehicules" },
-  { file: "03_fiche.png", url: "https://www.all-inrent.com/fr/vehicules" },
   { file: "04_favoris.png", url: "https://www.all-inrent.com/fr/favoris" },
   { file: "05_contact.png", url: "https://www.all-inrent.com/fr/contact" },
 ];
