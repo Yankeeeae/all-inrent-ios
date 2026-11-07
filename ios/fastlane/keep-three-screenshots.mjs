@@ -57,20 +57,53 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function versionIdOfItem(item) {
+  const direct = item.relationships?.appStoreVersion?.data?.id;
+  if (direct) return direct;
+  const detail = await api("GET", `reviewSubmissionItems/${item.id}?include=appStoreVersion`);
+  return (
+    detail.json?.data?.relationships?.appStoreVersion?.data?.id ||
+    (detail.json?.included || []).find((row) => row.type === "appStoreVersions")?.id ||
+    null
+  );
+}
+
+async function cancelReview(review) {
+  console.log(`Retrait de la review ${review.id} (${review.attributes?.state})`);
+  const canceled = await api("PATCH", `reviewSubmissions/${review.id}`, {
+    data: { type: "reviewSubmissions", id: review.id, attributes: { canceled: true } },
+  });
+  return canceled.ok;
+}
+
 async function unlock(versionId) {
+  const legacy = await api("GET", `appStoreVersions/${versionId}/appStoreVersionSubmission`);
+  if (legacy.ok && legacy.json?.data?.id) {
+    console.log(`Retrait de la soumission ${legacy.json.data.id}`);
+    await api("DELETE", `appStoreVersionSubmissions/${legacy.json.data.id}`);
+  }
   const reviews = await api("GET", `apps/${APP_ID}/reviewSubmissions?filter[platform]=IOS&limit=20`);
   if (!reviews.ok) return null;
-  for (const review of reviews.json.data || []) {
+  const open = (reviews.json.data || []).filter((review) => {
     const state = review.attributes?.state;
-    if (state === "COMPLETE" || state === "CANCELED" || review.attributes?.canceled) continue;
-    const items = await api("GET", `reviewSubmissions/${review.id}/items?limit=20`);
-    const linked = (items.json?.data || []).some((item) => item.relationships?.appStoreVersion?.data?.id === versionId);
-    if (!linked) continue;
-    console.log(`Retrait de la review ${review.id} (${state})`);
-    const canceled = await api("PATCH", `reviewSubmissions/${review.id}`, {
-      data: { type: "reviewSubmissions", id: review.id, attributes: { canceled: true } },
-    });
-    if (!canceled.ok) return null;
+    return state !== "COMPLETE" && state !== "CANCELED" && !review.attributes?.canceled;
+  });
+  const targets = [];
+  for (const review of open) {
+    const items = await api("GET", `reviewSubmissions/${review.id}/items?limit=20&include=appStoreVersion`);
+    const rows = items.json?.data || [];
+    console.log(`review ${review.id} ${review.attributes?.state} items=${rows.length}`);
+    const ids = [];
+    for (const item of rows) {
+      const id = await versionIdOfItem(item);
+      ids.push(id);
+      console.log(`  item ${item.id} version ${id || JSON.stringify(item.relationships || {}).slice(0, 240)}`);
+    }
+    if (ids.includes(versionId) || (open.length === 1 && ids.every((id) => !id))) targets.push(review);
+  }
+  for (const review of targets) {
+    const canceled = await cancelReview(review);
+    if (!canceled) return null;
   }
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const version = await api("GET", `appStoreVersions/${versionId}`);
