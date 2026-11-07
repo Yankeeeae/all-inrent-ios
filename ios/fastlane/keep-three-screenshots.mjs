@@ -69,11 +69,21 @@ async function versionIdOfItem(item) {
 }
 
 async function cancelReview(review) {
+  if (review.attributes?.state === "CANCELING") {
+    console.log(`Review ${review.id} déjà en cours de retrait`);
+    return true;
+  }
   console.log(`Retrait de la review ${review.id} (${review.attributes?.state})`);
   const canceled = await api("PATCH", `reviewSubmissions/${review.id}`, {
     data: { type: "reviewSubmissions", id: review.id, attributes: { canceled: true } },
   });
-  return canceled.ok;
+  if (canceled.ok) return true;
+  const detail = JSON.stringify(canceled.json || "");
+  if (detail.includes("try again later") || detail.includes("ENTITY_STATE_INVALID")) {
+    console.log("Retrait déjà engagé");
+    return true;
+  }
+  return false;
 }
 
 async function unlock(versionId) {
@@ -105,7 +115,7 @@ async function unlock(versionId) {
     const canceled = await cancelReview(review);
     if (!canceled) return null;
   }
-  for (let attempt = 0; attempt < 12; attempt += 1) {
+  for (let attempt = 0; attempt < 24; attempt += 1) {
     const version = await api("GET", `appStoreVersions/${versionId}`);
     const state = version.json?.data?.attributes?.appStoreState;
     console.log(`Version ${state}`);
