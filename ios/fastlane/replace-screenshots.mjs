@@ -80,22 +80,6 @@ function promoFor(width, height) {
   }
 }
 
-function assetUrl(asset) {
-  if (!asset?.templateUrl || !asset.width || !asset.height) return null;
-  return asset.templateUrl
-    .replace("{w}", String(asset.width))
-    .replace("{h}", String(asset.height))
-    .replace("{f}", "png");
-}
-
-async function downloadAsset(shot) {
-  const url = assetUrl(shot.attributes?.imageAsset);
-  if (!url) return null;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  return Buffer.from(await res.arrayBuffer());
-}
-
 async function uploadScreenshot(setId, fileName, fileBuffer) {
   const created = await api("POST", "appScreenshots", {
     data: {
@@ -154,12 +138,6 @@ async function replaceSet(set) {
     console.log(`Ensemble ${display} en ${size?.width}x${size?.height} : taille non préparée, laissé tel quel`);
     return false;
   }
-  const keepers = [];
-  for (const shot of current.slice(PROMO_NAMES.length)) {
-    const file = await downloadAsset(shot);
-    if (!file) throw new Error(`Impossible de relire une capture conservée de ${display}`);
-    keepers.push(file);
-  }
   for (const shot of current) {
     const removed = await api("DELETE", `appScreenshots/${shot.id}`);
     if (!removed.ok) throw new Error(`Suppression refusée pour ${display}`);
@@ -169,11 +147,7 @@ async function replaceSet(set) {
     await uploadScreenshot(set.id, `${String(index).padStart(2, "0")}_promo.png`, file);
     index += 1;
   }
-  for (const file of keepers) {
-    await uploadScreenshot(set.id, `${String(index).padStart(2, "0")}_suite.png`, file);
-    index += 1;
-  }
-  console.log(`${display} : 3 visuels remplacés, ${keepers.length} capture(s) conservée(s)`);
+  console.log(`${display} : ${promos.length} visuels en place`);
   return true;
 }
 

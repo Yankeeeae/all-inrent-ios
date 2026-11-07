@@ -7,8 +7,20 @@ const KEY_ID = process.env.APP_STORE_CONNECT_KEY_ID;
 const ISSUER = process.env.APP_STORE_CONNECT_ISSUER_ID;
 const KEY_PATH = process.env.APP_STORE_CONNECT_API_KEY_PATH;
 const NOTES = {
-  "fr-FR": "Nouvelle présentation des visuels sur l’App Store.",
-  "en-US": "Updated App Store preview images.",
+  "fr-FR": [
+    "Nouvelle présentation d’ALL IN RENT.",
+    "",
+    "• Découvrez les locations de luxe : Ferrari, Lamborghini et chauffeur, auprès des agences partenaires.",
+    "• Trouvez un véhicule près de chez vous, sur la carte, partout dans le monde.",
+    "• Ouvrez une fiche complète : photos, caractéristiques, conditions de location et tarif.",
+  ].join("\n"),
+  "en-US": [
+    "A new presentation of ALL IN RENT.",
+    "",
+    "• Discover luxury rentals: Ferrari, Lamborghini and chauffeur service, from partner agencies.",
+    "• Find a vehicle near you on the map, anywhere in the world.",
+    "• Open a full listing: photos, specifications, rental conditions and price.",
+  ].join("\n"),
 };
 
 if (!KEY_ID || !ISSUER || !KEY_PATH) {
@@ -69,8 +81,12 @@ if (!locales.ok) process.exit(1);
 for (const row of locales.json.data || []) {
   const locale = row.attributes?.locale;
   const note = NOTES[locale];
-  if (!note || row.attributes?.whatsNew) {
-    console.log(`${locale} déjà renseigné`);
+  if (!note) {
+    console.log(`${locale} inchangé`);
+    continue;
+  }
+  if (row.attributes?.whatsNew === note) {
+    console.log(`${locale} déjà à jour`);
     continue;
   }
   const patched = await api("PATCH", `appStoreVersionLocalizations/${row.id}`, {
