@@ -3,8 +3,8 @@ default_platform(:ios)
 APP_ID = "com.allinrent.app"
 APP_NUMERIC_ID = "6813145770"
 TEAM_ID = "59GW7X6RA6"
-VERSION = "1.0.12"
-BUILD = "38"
+VERSION = "1.0.13"
+BUILD = "39"
 
 def connect_api_key
   app_store_connect_api_key(
@@ -109,8 +109,8 @@ platform :ios do
       app_version: VERSION,
       app_rating_config_path: rating_path,
       skip_binary_upload: true,
-      skip_metadata: false,
-      skip_screenshots: shots.empty?,
+      skip_metadata: ENV["SKIP_METADATA"] == "true",
+      skip_screenshots: ENV["SKIP_SCREENSHOTS"] == "true" || shots.empty?,
       force: true,
       submit_for_review: true,
       reject_if_possible: true,

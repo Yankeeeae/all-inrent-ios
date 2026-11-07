@@ -246,13 +246,54 @@ const editableStates = new Set([
   "WAITING_FOR_REVIEW",
   "IN_REVIEW",
 ]);
+async function createNextVersion(live) {
+  const parts = String(live.attributes?.versionString || "1.0.12").split(".");
+  const next = parts.map((part, index) => (index === parts.length - 1 ? String(Number(part) + 1) : part)).join(".");
+  console.log(`Création de la version ${next} à partir de ${live.attributes.versionString}`);
+  const created = await api("POST", "appStoreVersions", {
+    data: {
+      type: "appStoreVersions",
+      attributes: { platform: "IOS", versionString: next },
+      relationships: { app: { data: { type: "apps", id: APP_ID } } },
+    },
+  });
+  if (!created.ok) return null;
+  const version = created.json.data;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    await sleep(3000);
+    const locales = await api("GET", `appStoreVersions/${version.id}/appStoreVersionLocalizations?limit=20`);
+    const first = locales.json?.data?.[0];
+    const description = first?.attributes?.description || "";
+    const sets = first
+      ? await api("GET", `appStoreVersionLocalizations/${first.id}/appScreenshotSets?limit=20`)
+      : { json: { data: [] } };
+    const shots = [];
+    for (const set of sets.json?.data || []) {
+      if (!String(set.attributes?.screenshotDisplayType || "").startsWith("APP_IPHONE_")) continue;
+      shots.push(...(await screenshotsOf(set.id)));
+    }
+    console.log(`Reprise fiche : texte ${description.length} caractères, ${shots.length} capture(s) iPhone`);
+    if (description && shots.length) return version;
+  }
+  console.error("La nouvelle version n'a pas repris la fiche. Elle est retirée.");
+  await api("DELETE", `appStoreVersions/${version.id}`);
+  return null;
+}
+
 const candidates = (versions.json.data || []).filter((version) => editableStates.has(version.attributes?.appStoreState));
 const preferred = ["PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY", "WAITING_FOR_REVIEW", "IN_REVIEW"];
 candidates.sort((a, b) => preferred.indexOf(a.attributes.appStoreState) - preferred.indexOf(b.attributes.appStoreState));
-const target = candidates[0];
+let target = candidates[0];
+let createdVersion = false;
 if (!target) {
-  console.error("Aucune version modifiable. La fiche en ligne ne peut pas changer de captures sans une nouvelle version.");
-  process.exit(2);
+  const live = (versions.json.data || []).find((version) => version.attributes?.appStoreState === "READY_FOR_SALE");
+  if (!live) {
+    console.error("Aucune version modifiable.");
+    process.exit(2);
+  }
+  target = await createNextVersion(live);
+  createdVersion = true;
+  if (!target) process.exit(2);
 }
 
 console.log(`Version retenue ${target.attributes.versionString} ${target.attributes.appStoreState}`);
@@ -281,6 +322,10 @@ if (!replaced) {
 
 const fresh = await api("GET", `appStoreVersions/${target.id}`);
 const state = fresh.json?.data?.attributes?.appStoreState;
+if (createdVersion) {
+  console.log(`Captures en place sur ${target.attributes?.versionString || "la nouvelle version"}. Le build doit être joint avant la review.`);
+  process.exit(0);
+}
 if (state === "WAITING_FOR_REVIEW" || state === "IN_REVIEW") {
   console.log(`Les captures sont en place. La version est déjà chez Apple (${state}).`);
   process.exit(0);
