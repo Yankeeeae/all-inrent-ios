@@ -2,8 +2,8 @@ default_platform(:ios)
 
 APP_ID = "com.allinrent.pro"
 TEAM_ID = "59GW7X6RA6"
-VERSION = "1.0.1"
-BUILD = "3"
+VERSION = "1.0.2"
+BUILD = "4"
 
 def connect_api_key
   app_store_connect_api_key(
@@ -84,7 +84,7 @@ platform :ios do
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: false,
-      changelog: "ALL IN RENT PRO #{VERSION} (#{BUILD}) — espace agence : flotte, demandes, contrats digitaux. Pas de tracking pub."
+      changelog: "ALL IN RENT PRO #{VERSION} (#{BUILD}) — nouvelle icône AIR PRO. Espace agence : flotte, demandes, contrats. Pas de tracking pub."
     )
 
     if ENV.fetch("SUBMIT_FOR_REVIEW", "true") == "true"
