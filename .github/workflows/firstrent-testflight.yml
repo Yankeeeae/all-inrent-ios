@@ -92,4 +92,5 @@ jobs:
           APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/${{ steps.app.outputs.dir }}/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
           P12_PATH: ${{ github.workspace }}/${{ steps.app.outputs.dir }}/ios_distribution.p12
           P12_PASSWORD: allinrent-ci
+          SUBMIT_FOR_REVIEW: ${{ inputs.app == 'client' && 'true' || 'false' }}
         run: fastlane release
