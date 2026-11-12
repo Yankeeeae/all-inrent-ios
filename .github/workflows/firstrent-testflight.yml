@@ -69,7 +69,7 @@ jobs:
         working-directory: ${{ steps.app.outputs.dir }}
         run: |
           xcodegen generate
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 1" "${{ steps.app.outputs.plist }}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 2" "${{ steps.app.outputs.plist }}"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.0" "${{ steps.app.outputs.plist }}"
           plutil -p "${{ steps.app.outputs.plist }}" | grep CFBundle
 
