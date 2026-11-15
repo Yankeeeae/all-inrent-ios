@@ -166,7 +166,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       window._fbq = function(){};
       window.gtag = function(){};
       var css = document.createElement('style');
-      css.textContent = 'html.air-native-app,html.air-native-app body{background:#fff!important} html.air-native-app #air-boot-splash{display:none!important} html.air-native-app footer:not(.air-bottom){display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important} html.air-native-app .air-mobile-home-hero{display:flex!important} html.air-native-app .air-desktop-home-hero{display:none!important} html.air-native-app .site-main-pad,html.air-native-app .site-main-pad-desktop{padding-bottom:var(--app-safe-bottom,env(safe-area-inset-bottom,0px))!important}';
+      css.textContent = 'html.air-native-app,html.air-native-app body{background:#050b18!important} html.air-native-app #air-boot-splash[data-visible="1"]{display:flex!important;opacity:1!important;visibility:visible!important} html.air-native-app footer:not(.air-bottom){display:none!important} html.air-native-app .air-publish,html.air-native-app a[href*="tiktok.com"],html.air-native-app iframe[src*="tiktok.com"]{display:none!important} html.air-native-app .air-mobile-home-hero{display:flex!important} html.air-native-app .air-desktop-home-hero{display:none!important} html.air-native-app .site-main-pad,html.air-native-app .site-main-pad-desktop{padding-bottom:var(--app-safe-bottom,env(safe-area-inset-bottom,0px))!important}';
       document.documentElement.appendChild(css);
     })();
     """
@@ -176,9 +176,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
 
     webView = WKWebView(frame: view.bounds, configuration: config)
     webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    webView.backgroundColor = .white
+    webView.backgroundColor = screenColor
     webView.isOpaque = true
-    webView.scrollView.backgroundColor = .white
+    webView.scrollView.backgroundColor = screenColor
     webView.scrollView.contentInsetAdjustmentBehavior = .never
     webView.scrollView.contentInset = .zero
     webView.scrollView.verticalScrollIndicatorInsets = .zero
@@ -298,6 +298,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     logo.clipsToBounds = true
     logo.setContentHuggingPriority(.required, for: .horizontal)
     logo.setContentHuggingPriority(.required, for: .vertical)
+    loadRemoteBootLogo(into: logo)
 
     bootRing.translatesAutoresizingMaskIntoConstraints = false
     bootRing.start()
@@ -312,13 +313,23 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     bootShownAt = Date()
 
     NSLayoutConstraint.activate([
-      logo.widthAnchor.constraint(equalToConstant: 168),
-      logo.heightAnchor.constraint(equalToConstant: 56),
+      logo.heightAnchor.constraint(equalToConstant: 92),
+      logo.widthAnchor.constraint(equalTo: logo.heightAnchor, multiplier: 263.0 / 100.0),
       bootRing.widthAnchor.constraint(equalToConstant: 28),
       bootRing.heightAnchor.constraint(equalToConstant: 28),
       stack.centerXAnchor.constraint(equalTo: bootOverlay.centerXAnchor),
       stack.centerYAnchor.constraint(equalTo: bootOverlay.centerYAnchor)
     ])
+  }
+
+  private func loadRemoteBootLogo(into view: UIImageView) {
+    guard let url = URL(string: "https://www.all-inrent.com/logo-air-light.png?v=20261115") else { return }
+    URLSession.shared.dataTask(with: url) { data, _, _ in
+      guard let data, let image = UIImage(data: data) else { return }
+      DispatchQueue.main.async {
+        view.image = image
+      }
+    }.resume()
   }
 
   private func showBootOverlay() {
@@ -512,7 +523,15 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
 
   private func injectGeo(_ coordinate: CLLocationCoordinate2D) {
-    let js = "window.__AIR_GEO={lat:\(coordinate.latitude),lng:\(coordinate.longitude)};"
+    let lat = coordinate.latitude
+    let lng = coordinate.longitude
+    let js = """
+    (function(){
+      var g={lat:\(lat),lng:\(lng)};
+      window.__AIR_GEO=g;
+      try{localStorage.setItem('air_geo_cache_v1',JSON.stringify({lat:g.lat,lng:g.lng,at:Date.now()}));}catch(e){}
+    })();
+    """
     webView.evaluateJavaScript(js, completionHandler: nil)
   }
 
