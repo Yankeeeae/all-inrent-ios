@@ -294,19 +294,5 @@ if (!replaced) {
   process.exit(1);
 }
 
-const fresh = await api("GET", `appStoreVersions/${target.id}`);
-const state = fresh.json?.data?.attributes?.appStoreState;
-if (createdVersion) {
-  console.log(`Captures en place sur ${target.attributes?.versionString || "la nouvelle version"}. Le build doit être joint avant la review.`);
-  process.exit(0);
-}
-if (state === "WAITING_FOR_REVIEW" || state === "IN_REVIEW") {
-  console.log(`Les captures sont en place. La version est déjà chez Apple (${state}).`);
-  process.exit(0);
-}
-
-const ok = await submit(target.id);
-if (!ok) {
-  console.error("Les captures sont enregistrées, mais la soumission à Apple a été refusée.");
-  process.exit(1);
-}
+console.log(`Captures en place sur ${target.attributes?.versionString} ${target.attributes?.appStoreState}.`);
+process.exit(0);

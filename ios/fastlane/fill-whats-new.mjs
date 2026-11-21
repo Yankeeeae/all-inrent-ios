@@ -70,10 +70,22 @@ async function api(method, apiPath, body) {
 
 const versions = await api(
   "GET",
-  `apps/${APP_ID}/appStoreVersions?filter[platform]=IOS&filter[versionString]=${VERSION}&limit=5`
+  `apps/${APP_ID}/appStoreVersions?filter[platform]=IOS&limit=15`
 );
-const version = versions.json?.data?.[0];
-if (!versions.ok || !version) process.exit(1);
+if (!versions.ok) process.exit(1);
+const rows = versions.json?.data || [];
+const editable = new Set([
+  "PREPARE_FOR_SUBMISSION",
+  "DEVELOPER_REJECTED",
+  "REJECTED",
+  "METADATA_REJECTED",
+  "INVALID_BINARY",
+]);
+const version =
+  rows.find((row) => row.attributes?.versionString === VERSION && editable.has(row.attributes?.appStoreState)) ||
+  rows.find((row) => editable.has(row.attributes?.appStoreState)) ||
+  rows.find((row) => row.attributes?.versionString === VERSION);
+if (!version) process.exit(1);
 console.log(`Version ${version.attributes.versionString} ${version.attributes.appStoreState}`);
 
 const locales = await api("GET", `appStoreVersions/${version.id}/appStoreVersionLocalizations?limit=20`);
