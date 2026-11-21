@@ -1,1 +1,5 @@
-First release: agency workspace, fleet, inbound leads and digital contracts.
+ALL IN RENT PRO 1.0.3
+
+• AIR PRO launch screen.
+• Push and location better linked to the agency workspace.
+• Fleet, inbound leads and contracts, same as the web.

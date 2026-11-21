@@ -6,6 +6,7 @@ import UserNotifications
 private let startURL = URL(string: "https://www.all-inrent.com/agency/login")!
 private let screenColor = UIColor(red: 5 / 255, green: 11 / 255, blue: 24 / 255, alpha: 1)
 private let airOpenPushURL = Notification.Name("airOpenPushURL")
+private let airPushTokenReady = Notification.Name("airPushTokenReady")
 private enum AirPendingURL {
   static var value: URL?
 }
@@ -74,6 +75,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     let token = deviceToken.map { String(format: "%02x", $0) }.joined()
     UserDefaults.standard.set(token, forKey: "air.pushToken")
     Self.registerToken(token)
+    NotificationCenter.default.post(name: airPushTokenReady, object: token)
   }
 
   func userNotificationCenter(
@@ -200,6 +202,12 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
       name: airOpenPushURL,
       object: nil
     )
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(injectPushTokenNote(_:)),
+      name: airPushTokenReady,
+      object: nil
+    )
     if let pending = AirPendingURL.value {
       AirPendingURL.value = nil
       DispatchQueue.main.async { [weak self] in
@@ -267,6 +275,17 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
     pushSafeAreaInsets()
     hideBootOverlay()
+    injectPushToken(UserDefaults.standard.string(forKey: "air.pushToken"))
+  }
+
+  @objc private func injectPushTokenNote(_ note: Notification) {
+    injectPushToken(note.object as? String)
+  }
+
+  private func injectPushToken(_ token: String?) {
+    guard let token, !token.isEmpty else { return }
+    let escaped = token.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'")
+    webView.evaluateJavaScript("window.__AIR_PUSH_TOKEN='\(escaped)';", completionHandler: nil)
   }
 
   func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -308,8 +327,8 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     bootShownAt = Date()
 
     NSLayoutConstraint.activate([
-      logo.widthAnchor.constraint(equalToConstant: 168),
-      logo.heightAnchor.constraint(equalToConstant: 56),
+      logo.heightAnchor.constraint(equalToConstant: 80),
+      logo.widthAnchor.constraint(equalTo: logo.heightAnchor, multiplier: 263.0 / 100.0),
       bootRing.widthAnchor.constraint(equalToConstant: 28),
       bootRing.heightAnchor.constraint(equalToConstant: 28),
       stack.centerXAnchor.constraint(equalTo: bootOverlay.centerXAnchor),
@@ -524,7 +543,15 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
   func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
 
   private func injectGeo(_ coordinate: CLLocationCoordinate2D) {
-    let js = "window.__AIR_GEO={lat:\(coordinate.latitude),lng:\(coordinate.longitude)};"
+    let lat = coordinate.latitude
+    let lng = coordinate.longitude
+    let js = """
+    (function(){
+      var g={lat:\(lat),lng:\(lng)};
+      window.__AIR_GEO=g;
+      try{localStorage.setItem('air_geo_cache_v1',JSON.stringify({lat:g.lat,lng:g.lng,at:Date.now()}));}catch(e){}
+    })();
+    """
     webView.evaluateJavaScript(js, completionHandler: nil)
   }
 

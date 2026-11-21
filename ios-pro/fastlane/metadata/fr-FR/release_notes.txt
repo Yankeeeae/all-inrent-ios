@@ -1,1 +1,5 @@
-Première version : espace agence, flotte, demandes et contrats digitaux.
+ALL IN RENT PRO 1.0.3
+
+• Écran d’ouverture AIR PRO.
+• Notifications et géolocalisation mieux reliées à l’espace agence.
+• Flotte, demandes et contrats, comme sur le web.
