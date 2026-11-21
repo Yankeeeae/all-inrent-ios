@@ -2,22 +2,22 @@ import { createSign } from "node:crypto";
 import { readFileSync } from "node:fs";
 
 const APP_ID = "6813145770";
-const VERSION = process.env.APP_STORE_VERSION || "1.0.13";
+const VERSION = process.env.APP_STORE_VERSION || "1.0.15";
 const KEY_ID = process.env.APP_STORE_CONNECT_KEY_ID;
 const ISSUER = process.env.APP_STORE_CONNECT_ISSUER_ID;
 const KEY_PATH = process.env.APP_STORE_CONNECT_API_KEY_PATH;
 const NOTES = {
   "fr-FR": [
-    "Nouvelle présentation d’ALL IN RENT.",
+    "Nouvel accueil ALL IN RENT.",
     "",
-    "• Découvrez les locations de luxe : Ferrari, Lamborghini et chauffeur, auprès des agences partenaires.",
+    "• Recherche plus claire : ville, dates et catégories (voiture, moto, chauffeur, yacht).",
     "• Trouvez un véhicule près de chez vous, sur la carte, partout dans le monde.",
     "• Ouvrez une fiche complète : photos, caractéristiques, conditions de location et tarif.",
   ].join("\n"),
   "en-US": [
-    "A new presentation of ALL IN RENT.",
+    "A refreshed ALL IN RENT home.",
     "",
-    "• Discover luxury rentals: Ferrari, Lamborghini and chauffeur service, from partner agencies.",
+    "• Clearer search: city, dates and categories (cars, bikes, chauffeur, yachts).",
     "• Find a vehicle near you on the map, anywhere in the world.",
     "• Open a full listing: photos, specifications, rental conditions and price.",
   ].join("\n"),

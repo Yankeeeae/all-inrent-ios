@@ -120,6 +120,14 @@ jobs:
           APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
         run: node fastlane/release-pending.mjs
 
+      - name: Replace the three promo screenshots
+        if: ${{ inputs.skip_screenshots != true }}
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+        run: node fastlane/replace-screenshots.mjs
+
       - name: Keep only the three promo screenshots
         if: ${{ inputs.skip_binary == true }}
         env:
@@ -130,7 +138,6 @@ jobs:
         run: node fastlane/keep-three-screenshots.mjs
 
       - name: Set What's New
-        if: ${{ inputs.skip_binary == true }}
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
