@@ -81,7 +81,7 @@ platform :ios do
       changelog: "ALL IN RENT #{VERSION} (#{BUILD}) — nouvel accueil et recherche plus claire. Notifications véhicules près de vous. Pas de tracking pub."
     )
 
-    sh("node #{File.expand_path('fill-whats-new.mjs', __dir__)}")
+    sh("node #{File.expand_path('fill-whats-new.mjs', __dir__)}", error_callback: ->(_) { UI.important("What's New skip") })
 
     if ENV.fetch("SUBMIT_FOR_REVIEW", "true") == "true"
       submit_review

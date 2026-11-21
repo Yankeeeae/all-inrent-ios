@@ -85,7 +85,10 @@ const version =
   rows.find((row) => row.attributes?.versionString === VERSION && editable.has(row.attributes?.appStoreState)) ||
   rows.find((row) => editable.has(row.attributes?.appStoreState)) ||
   rows.find((row) => row.attributes?.versionString === VERSION);
-if (!version) process.exit(1);
+if (!version) {
+  console.log(`Pas encore de fiche ${VERSION} à remplir, skip.`);
+  process.exit(0);
+}
 console.log(`Version ${version.attributes.versionString} ${version.attributes.appStoreState}`);
 
 const locales = await api("GET", `appStoreVersions/${version.id}/appStoreVersionLocalizations?limit=20`);
