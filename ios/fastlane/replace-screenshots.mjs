@@ -272,7 +272,11 @@ if (!target) {
 
 console.log(`Version retenue ${target.attributes.versionString} ${target.attributes.appStoreState}`);
 if (target.attributes.appStoreState === "WAITING_FOR_REVIEW" || target.attributes.appStoreState === "IN_REVIEW") {
-  await unlock(target.id);
+  const unlocked = await unlock(target.id);
+  if (!unlocked) {
+    console.log("Version déjà chez Apple. Les captures ne peuvent plus être remplacées.");
+    process.exit(0);
+  }
 }
 
 const localizations = await api("GET", `appStoreVersions/${target.id}/appStoreVersionLocalizations?limit=20`);
